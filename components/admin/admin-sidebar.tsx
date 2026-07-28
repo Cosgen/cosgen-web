@@ -16,6 +16,8 @@ import {
   Ticket,
   Menu,
   X,
+  LayoutDashboard,
+  ShoppingBag,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -34,7 +36,8 @@ export function AdminSidebar() {
   };
 
   const navItems = [
-    { label: "Daftar Pesanan", href: "/admin", icon: Users },
+    { label: "Dashboard Ringkasan", href: "/admin", icon: LayoutDashboard },
+    { label: "Daftar Pesanan (Full)", href: "/admin/pesanan", icon: ShoppingBag },
     { label: "Scheduler & Slot", href: "/admin/scheduler", icon: Calendar },
     { label: "Ringkasan Bisnis", href: "/admin/ringkasan", icon: BarChart3 },
     { label: "Item & Price List", href: "/admin/item-jasa", icon: Tag },
