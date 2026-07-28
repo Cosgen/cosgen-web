@@ -40,6 +40,7 @@ export async function GET() {
           gdriveFinalUrl: d.gdrive_final_url || d.gdriveFinalUrl,
           subStatus: d.sub_status || d.subStatus,
           briefText: d.brief_text || d.briefText,
+          reviewStartedAt: d.review_started_at || d.reviewStartedAt,
           createdAt: d.created_at || d.createdAt || new Date().toISOString(),
         }));
         globalServerOrders = mappedOrders;
@@ -144,6 +145,7 @@ export async function POST(request: Request) {
           if (partial.photoCount !== undefined) dbPartial.photo_count = partial.photoCount;
           if (partial.totalAmount !== undefined) dbPartial.total_amount = partial.totalAmount;
           if (partial.briefText !== undefined) dbPartial.brief_text = partial.briefText;
+          if (partial.reviewStartedAt !== undefined) dbPartial.review_started_at = partial.reviewStartedAt;
 
           const res = await supabase.from("orders").update(dbPartial).eq("id", orderId);
           if (res.error) console.error("Supabase update error:", res.error);

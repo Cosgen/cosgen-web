@@ -1,35 +1,47 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { AlertTriangle, Timer, Folder, MessageCircle, Lock, ExternalLink, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Timer, Folder, Lock, ExternalLink } from "lucide-react";
 
 interface ReviewStatusBannerProps {
   orderCode: string;
   gdriveReviewUrl?: string;
-  onOpenRevisionChat?: () => void;
+  reviewStartedAt?: string;
+  createdAt?: string;
 }
 
 export function ReviewStatusBanner({
   orderCode,
   gdriveReviewUrl,
-  onOpenRevisionChat,
+  reviewStartedAt,
+  createdAt,
 }: ReviewStatusBannerProps) {
-  // 4x24 hours countdown = 96 hours (345600 seconds)
-  const [secondsLeft, setSecondsLeft] = useState<number>(345600);
+  const calculateSecondsLeft = () => {
+    const TOTAL_SECONDS = 96 * 3600; // 4x24 hours = 345,600 seconds
+    const startIso = reviewStartedAt || createdAt;
+    if (!startIso) return TOTAL_SECONDS;
+    const startMs = new Date(startIso).getTime();
+    if (isNaN(startMs)) return TOTAL_SECONDS;
+    const elapsedSec = Math.floor((Date.now() - startMs) / 1000);
+    return Math.max(0, TOTAL_SECONDS - elapsedSec);
+  };
+
+  const [secondsLeft, setSecondsLeft] = useState<number>(calculateSecondsLeft);
 
   useEffect(() => {
+    setSecondsLeft(calculateSecondsLeft());
     const timer = setInterval(() => {
-      setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      setSecondsLeft(calculateSecondsLeft());
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [reviewStartedAt, createdAt]);
 
   const days = Math.floor(secondsLeft / (24 * 3600));
   const hours = Math.floor((secondsLeft % (24 * 3600)) / 3600);
   const minutes = Math.floor((secondsLeft % 3600) / 60);
   const seconds = secondsLeft % 60;
 
-  const formattedTime = `${days} hari ${hours} jam ${minutes}m ${seconds}s`;
+  const formattedTime = `${days}d ${hours}h ${minutes}m ${seconds}s`;
 
   return (
     <div className="p-5 bg-red-600 text-white rounded-2xl space-y-3.5 shadow-xl border border-red-700 font-sans">
@@ -55,7 +67,7 @@ export function ReviewStatusBanner({
       <div className="p-3 bg-red-950/80 rounded-xl border border-red-400/40 flex items-center gap-2 text-xs font-semibold text-red-200">
         <Lock className="w-4 h-4 text-amber-400 shrink-0" />
         <span>
-          <strong>Pembayaran Terkunci:</strong> Tombol bayar baru akan aktif setelah Admin menyetujui ACC & memberikan link review.
+          <strong>Pembayaran Terkunci:</strong> Tombol bayar baru akan aktif setelah Admin menyetujui ACC & mengubah status ke Menunggu Pembayaran.
         </span>
       </div>
 

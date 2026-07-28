@@ -389,6 +389,8 @@ function CekStatusContent() {
                 <ReviewStatusBanner
                   orderCode={currentOrder.officialCode || currentOrder.code}
                   gdriveReviewUrl={currentOrder.gdriveReviewUrl}
+                  reviewStartedAt={currentOrder.reviewStartedAt}
+                  createdAt={currentOrder.createdAt}
                 />
               )}
 

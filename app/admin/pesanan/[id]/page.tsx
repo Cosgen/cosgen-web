@@ -20,6 +20,7 @@ import { RejectionReasonModal } from "@/components/admin/rejection-reason-modal"
 import { ConfirmAccButton } from "@/components/admin/confirm-acc-button";
 import { EditPhotoCountForm } from "@/components/admin/edit-photo-count-form";
 import { DeleteOrderModal } from "@/components/admin/delete-order-modal";
+import { ReviewStatusBanner } from "@/components/landing/review-status-banner";
 
 export default function AdminOrderDetailPage() {
   const params = useParams();
@@ -62,6 +63,10 @@ export default function AdminOrderDetailPage() {
   const handleStatusDropdownChange = (newStatus: OrderData["status"]) => {
     saveChanges({
       status: newStatus,
+      reviewStartedAt:
+        newStatus === "Review"
+          ? order.reviewStartedAt || new Date().toISOString()
+          : order.reviewStartedAt,
       isAccByAdmin:
         newStatus === "Menunggu Pembayaran" || newStatus === "Selesai"
           ? true
@@ -125,6 +130,16 @@ export default function AdminOrderDetailPage() {
           </span>
         </div>
       </div>
+
+      {/* Synchronized Review Countdown Banner */}
+      {order.status === "Review" && (
+        <ReviewStatusBanner
+          orderCode={order.officialCode || order.code}
+          gdriveReviewUrl={order.gdriveReviewUrl}
+          reviewStartedAt={order.reviewStartedAt}
+          createdAt={order.createdAt}
+        />
+      )}
 
       {/* Main Content Card */}
       <div className="bg-white rounded-2xl p-5 sm:p-7 border border-slate-200 shadow-md space-y-5">

@@ -26,6 +26,7 @@ export interface OrderData {
   gdriveFinalUrl?: string;
   subStatus?: string;
   briefText?: string;
+  reviewStartedAt?: string;
   createdAt: string;
 }
 
