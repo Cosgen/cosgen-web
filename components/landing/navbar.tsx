@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles, Calendar, Menu, X, ShieldCheck } from "lucide-react";
+import { Sparkles, Calendar, Menu, X, ShieldCheck, Layers } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 interface LandingNavbarProps {
@@ -17,35 +17,46 @@ export function LandingNavbar({
 }: LandingNavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const isHome = pathname === "/";
+  const isHome = pathname === "/home";
   const isCekStatus = pathname === "/cek-status";
+  const isPortfolio = pathname === "/portfolio";
 
+  // On /home, anchors work as same-page scroll
+  // On other pages, prefix with /home
   const getAnchorHref = (hash: string) => {
-    return isHome ? hash : `/${hash}`;
+    return isHome ? hash : `/home${hash}`;
   };
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-all font-sans text-xs">
       <div className="max-w-6xl mx-auto px-3 sm:px-5 h-12 flex items-center justify-between">
-        {/* Brand Official Logo */}
+        {/* Brand Logo */}
         <Link href="/" className="flex items-center group">
           <img
             src="https://res.cloudinary.com/or0nvx0c/image/upload/v1785184392/Logo_Warna_01_y5dpcm.png"
-            alt="CosGen.id Official Logo"
-            className="h-7 sm:h-7.5 w-auto object-contain transition-transform group-hover:scale-105"
+            alt="CosGen.id"
+            className="h-7 sm:h-7.5 w-auto object-contain transition-transform group-hover:scale-105 dark:hidden"
+          />
+          <img
+            src="https://res.cloudinary.com/or0nvx0c/image/upload/v1785184391/Logo_Putih_01_xozs8n.png"
+            alt="CosGen.id"
+            className="h-7 sm:h-7.5 w-auto object-contain transition-transform group-hover:scale-105 hidden dark:block"
           />
         </Link>
 
-        {/* Desktop Nav Links */}
+        {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-4 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
           <Link href={getAnchorHref("#portfolio")} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             Portofolio
+          </Link>
+          <Link href="/portfolio" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1">
+            <Layers className="w-3 h-3" /> Galeri
           </Link>
           <Link href={getAnchorHref("#compare")} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             Compare
           </Link>
           <Link href={getAnchorHref("#pricelist")} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-            Packet
+            Paket
           </Link>
           <Link href="/cek-status" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             Cek Status
@@ -53,7 +64,7 @@ export function LandingNavbar({
           <Link href={getAnchorHref("#faq")} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             FAQ
           </Link>
-          {!isCekStatus && (
+          {!isCekStatus && !isPortfolio && (
             <Link
               href="/admin"
               className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1 text-[10px]"
@@ -63,7 +74,7 @@ export function LandingNavbar({
           )}
         </nav>
 
-        {/* CTA Buttons & Theme Toggle */}
+        {/* Right side */}
         <div className="flex items-center gap-2">
           <ThemeToggle />
 
@@ -77,7 +88,7 @@ export function LandingNavbar({
                 <Calendar className="w-3 h-3 text-blue-600 dark:text-blue-400" /> Cek Slot
               </button>
             )}
-            {!isCekStatus && onOpenOrderModal && (
+            {!isCekStatus && !isPortfolio && onOpenOrderModal && (
               <button
                 type="button"
                 onClick={onOpenOrderModal}
@@ -88,7 +99,7 @@ export function LandingNavbar({
             )}
           </div>
 
-          {/* Mobile Hamburger Button */}
+          {/* Mobile hamburger */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -103,47 +114,30 @@ export function LandingNavbar({
       {mobileMenuOpen && (
         <div className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 pt-2 pb-3 space-y-2 text-[11px]">
           <nav className="flex flex-col space-y-1.5 font-semibold text-slate-700 dark:text-slate-300">
-            <Link href={getAnchorHref("#portfolio")} onClick={() => setMobileMenuOpen(false)}>
-              Portofolio
-            </Link>
-            <Link href={getAnchorHref("#compare")} onClick={() => setMobileMenuOpen(false)}>
-              Compare
-            </Link>
-            <Link href={getAnchorHref("#pricelist")} onClick={() => setMobileMenuOpen(false)}>
-              Packet
-            </Link>
-            <Link href="/cek-status" onClick={() => setMobileMenuOpen(false)}>
-              Cek Status
-            </Link>
-            <Link href={getAnchorHref("#faq")} onClick={() => setMobileMenuOpen(false)}>
-              FAQ
-            </Link>
-            {!isCekStatus && (
-              <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
-                Admin
-              </Link>
+            <Link href={getAnchorHref("#portfolio")} onClick={() => setMobileMenuOpen(false)}>Portofolio</Link>
+            <Link href="/portfolio" onClick={() => setMobileMenuOpen(false)}>Galeri Lengkap</Link>
+            <Link href={getAnchorHref("#compare")} onClick={() => setMobileMenuOpen(false)}>Compare</Link>
+            <Link href={getAnchorHref("#pricelist")} onClick={() => setMobileMenuOpen(false)}>Paket</Link>
+            <Link href="/cek-status" onClick={() => setMobileMenuOpen(false)}>Cek Status</Link>
+            <Link href={getAnchorHref("#faq")} onClick={() => setMobileMenuOpen(false)}>FAQ</Link>
+            {!isCekStatus && !isPortfolio && (
+              <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>Admin</Link>
             )}
           </nav>
           <div className="pt-1.5 flex flex-col gap-1.5">
             {onOpenSlotChecker && (
               <button
                 type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onOpenSlotChecker();
-                }}
+                onClick={() => { setMobileMenuOpen(false); onOpenSlotChecker(); }}
                 className="w-full py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold rounded-lg text-center flex items-center justify-center gap-1"
               >
                 <Calendar className="w-3 h-3 text-blue-600 dark:text-blue-400" /> Cek Slot
               </button>
             )}
-            {!isCekStatus && onOpenOrderModal && (
+            {!isCekStatus && !isPortfolio && onOpenOrderModal && (
               <button
                 type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  if (onOpenOrderModal) onOpenOrderModal();
-                }}
+                onClick={() => { setMobileMenuOpen(false); if (onOpenOrderModal) onOpenOrderModal(); }}
                 className="w-full py-1.5 bg-blue-600 text-white font-bold rounded-lg shadow-xs text-center"
               >
                 Pesan Sekarang
