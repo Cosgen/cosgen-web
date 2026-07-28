@@ -15,7 +15,7 @@ import {
   Folder,
   FileText,
 } from "lucide-react";
-import { getStoredOrders, updateSingleOrder, saveOrdersToStorage, OrderData } from "@/lib/order-store";
+import { getStoredOrders, updateSingleOrder, deleteSingleOrder, OrderData } from "@/lib/order-store";
 import { RejectionReasonModal } from "@/components/admin/rejection-reason-modal";
 import { ConfirmAccButton } from "@/components/admin/confirm-acc-button";
 import { EditPhotoCountForm } from "@/components/admin/edit-photo-count-form";
@@ -345,8 +345,7 @@ export default function AdminOrderDetailPage() {
         onClose={() => setDeleteModalOpen(false)}
         orderCode={order.code}
         onConfirmDelete={() => {
-          const current = getStoredOrders().filter((o) => o.id !== order.id);
-          saveOrdersToStorage(current);
+          deleteSingleOrder(order.id);
           router.push("/admin/pesanan");
         }}
       />

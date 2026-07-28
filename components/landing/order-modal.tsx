@@ -6,7 +6,7 @@ import { CustomerStep1Form } from "./customer-step1-form";
 import { OrderStep2Form, OrderGroup } from "./order-step2-form";
 import { OrderSuccessScreen } from "./order-success-screen";
 import { TermsConditionsModal } from "./terms-conditions-modal";
-import { getStoredOrders, saveOrdersToStorage, OrderData } from "@/lib/order-store";
+import { saveNewSingleOrder, OrderData } from "@/lib/order-store";
 import { INITIAL_PACKAGES } from "@/app/admin/item-jasa/page";
 
 interface OrderModalProps {
@@ -88,9 +88,7 @@ export function OrderModal({
       createdAt: new Date().toISOString().replace("T", " ").slice(0, 16),
     };
 
-    const currentOrders = getStoredOrders();
-    const updatedOrders = [newOrder, ...currentOrders];
-    saveOrdersToStorage(updatedOrders);
+    saveNewSingleOrder(newOrder);
 
     // 4. Move to Success step
     setStep(3);
