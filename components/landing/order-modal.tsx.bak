@@ -1,0 +1,124 @@
+"use client";
+
+import React, { useState } from "react";
+import { X } from "lucide-react";
+import { CustomerStep1Form } from "./customer-step1-form";
+import { OrderStep2Form, OrderGroup } from "./order-step2-form";
+import { OrderSuccessScreen } from "./order-success-screen";
+import { TermsConditionsModal } from "./terms-conditions-modal";
+
+interface OrderModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialPackage?: string;
+}
+
+export function OrderModal({
+  isOpen,
+  onClose,
+  initialPackage = "Pertamax",
+}: OrderModalProps) {
+  // Step 0: T&C, Step 1: Customer Info, Step 2: Order Detail, Step 3: Success REQ
+  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+
+  // Step 1 State
+  const [nickname, setNickname] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [instagram, setInstagram] = useState("");
+
+  // Step 2 State
+  const [orderGroups, setOrderGroups] = useState<OrderGroup[]>([
+    { id: "g-1", characterName: "", brief: "", photoCount: 1 },
+  ]);
+  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; size: string }[]>([]);
+  const [customerGdriveUrl, setCustomerGdriveUrl] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+
+  // Generated REQ Code
+  const [reqCode, setReqCode] = useState("");
+
+  if (!isOpen) return null;
+
+  const handleAgreeTc = () => {
+    setStep(1);
+  };
+
+  const handleStep2Submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const code = `REQ-${randomNum}`;
+    setReqCode(code);
+    setStep(3);
+  };
+
+  return (
+    <>
+      {step === 0 && (
+        <TermsConditionsModal
+          isOpen={true}
+          onClose={onClose}
+          onAgree={handleAgreeTc}
+        />
+      )}
+
+      {step > 0 && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative max-h-[90vh] overflow-y-auto">
+            {/* Close Button */}
+            <button
+              onClick={onClose}
+              className="absolute top-6 right-6 p-2 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Step Indicators */}
+            {step < 3 && (
+              <div className="flex items-center gap-2 mb-6">
+                <div className={`h-1.5 flex-1 rounded-full ${step >= 1 ? "bg-blue-600" : "bg-slate-200"}`} />
+                <div className={`h-1.5 flex-1 rounded-full ${step >= 2 ? "bg-blue-600" : "bg-slate-200"}`} />
+              </div>
+            )}
+
+            {step === 1 && (
+              <CustomerStep1Form
+                nickname={nickname}
+                setNickname={setNickname}
+                whatsapp={whatsapp}
+                setWhatsapp={setWhatsapp}
+                instagram={instagram}
+                setInstagram={setInstagram}
+                onNext={() => setStep(2)}
+                onBack={onClose}
+              />
+            )}
+
+            {step === 2 && (
+              <OrderStep2Form
+                selectedPackage={initialPackage}
+                orderGroups={orderGroups}
+                setOrderGroups={setOrderGroups}
+                uploadedFiles={uploadedFiles}
+                setUploadedFiles={setUploadedFiles}
+                customerGdriveUrl={customerGdriveUrl}
+                setCustomerGdriveUrl={setCustomerGdriveUrl}
+                promoCode={promoCode}
+                setPromoCode={setPromoCode}
+                onSubmit={handleStep2Submit}
+                onBack={() => setStep(1)}
+              />
+            )}
+
+            {step === 3 && (
+              <OrderSuccessScreen
+                reqCode={reqCode}
+                customerName={nickname}
+                onClose={onClose}
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

@@ -1,0 +1,172 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { Menu, X } from "lucide-react";
+
+const HERO_BG_IMAGE = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785188133/Pic_1_Aemeath_a6tnw8.jpg";
+const WHITE_LOGO = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785184391/Logo_Putih_01_xozs8n.png";
+
+interface HeroProps {
+  onOpenOrderModal?: () => void;
+  onOpenSlotChecker?: () => void;
+}
+
+export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  return (
+    <section className="relative w-full overflow-hidden bg-black font-sans tracking-[-0.02em] select-none" style={{ height: "100dvh" }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@1,400;1,500;1,600&display=swap');
+        .font-playfair { font-family: 'Playfair Display', serif; }
+      ` }} />
+
+      {/* Single Static Background Image */}
+      <div
+        className="absolute inset-0 bg-center bg-cover bg-no-repeat z-10"
+        style={{ backgroundImage: `url('${HERO_BG_IMAGE}')` }}
+      />
+
+      {/* Fixed Top Pill Navigation Overlay */}
+      <nav className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between p-3 sm:p-4">
+        {/* Brand Logo Left */}
+        <Link href="/" className="flex items-center gap-2 cursor-pointer z-10">
+          <img
+            src={WHITE_LOGO}
+            alt="CosGen.id Official White Logo"
+            className="h-7 sm:h-8 w-auto object-contain"
+          />
+        </Link>
+
+        {/* Center Glass Pill Nav (Desktop) */}
+        <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 bg-slate-900/60 backdrop-blur-md border border-white/15 rounded-full px-1.5 py-1 items-center gap-0.5 shadow-lg">
+          <Link
+            href="#portfolio"
+            className="text-white hover:bg-white/20 px-3.5 py-1 rounded-full text-[11px] font-semibold transition-colors"
+          >
+            Portofolio
+          </Link>
+          <Link
+            href="#compare"
+            className="text-white/80 hover:bg-white/20 hover:text-white px-3.5 py-1 rounded-full text-[11px] font-semibold transition-colors"
+          >
+            Compare
+          </Link>
+          <Link
+            href="#pricelist"
+            className="text-white/80 hover:bg-white/20 hover:text-white px-3.5 py-1 rounded-full text-[11px] font-semibold transition-colors"
+          >
+            Packet
+          </Link>
+          <Link
+            href="/cek-status"
+            className="text-white/80 hover:bg-white/20 hover:text-white px-3.5 py-1 rounded-full text-[11px] font-semibold transition-colors"
+          >
+            Cek Status
+          </Link>
+          <Link
+            href="#faq"
+            className="text-white/80 hover:bg-white/20 hover:text-white px-3.5 py-1 rounded-full text-[11px] font-semibold transition-colors"
+          >
+            FAQ
+          </Link>
+        </div>
+
+        {/* Right Hamburger for Mobile */}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden text-white p-1.5 bg-slate-900/60 rounded-lg backdrop-blur-sm border border-white/20"
+          >
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile Drawer Navigation */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-40 bg-slate-950/90 backdrop-blur-md p-6 flex flex-col justify-center items-center space-y-4 text-white md:hidden">
+          <Link
+            href="#portfolio"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-base font-bold hover:text-blue-400"
+          >
+            Portofolio
+          </Link>
+          <Link
+            href="#compare"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-base font-bold hover:text-blue-400"
+          >
+            Compare
+          </Link>
+          <Link
+            href="#pricelist"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-base font-bold hover:text-blue-400"
+          >
+            Packet
+          </Link>
+          <Link
+            href="/cek-status"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-base font-bold hover:text-blue-400"
+          >
+            Cek Status
+          </Link>
+          <Link
+            href="#faq"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-base font-bold hover:text-blue-400"
+          >
+            FAQ
+          </Link>
+        </div>
+      )}
+
+      {/* Central / Right-Top Heading + Action Buttons */}
+      <div className="absolute top-[14%] sm:top-[16%] left-0 right-0 md:left-auto md:right-12 flex flex-col items-center md:items-end text-center md:text-right px-4 sm:px-6 z-30 space-y-2.5">
+        {/* Line 1: Save the World? */}
+        <span
+          className="block font-playfair italic font-normal text-2xl sm:text-4xl md:text-5xl text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)] pointer-events-none"
+          style={{ letterSpacing: "-0.04em" }}
+        >
+          Save the World?
+        </span>
+
+        {/* Line 2: Save the CAT! */}
+        <span
+          className="block font-normal text-2xl sm:text-4xl md:text-5xl text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)] pointer-events-none -mt-1"
+          style={{ letterSpacing: "-0.06em" }}
+        >
+          Save the CAT!
+        </span>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 w-full max-w-sm pt-1.5">
+          <button
+            type="button"
+            onClick={onOpenOrderModal}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-[11px] sm:text-xs font-bold px-4 py-2 rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/30 border border-blue-400/20"
+          >
+            Pesan Sekarang
+          </button>
+
+          {onOpenSlotChecker && (
+            <button
+              type="button"
+              onClick={onOpenSlotChecker}
+              className="bg-white/10 hover:bg-white/20 border border-white/30 text-white text-[11px] sm:text-xs font-bold px-4 py-2 rounded-full transition-all hover:scale-105 active:scale-95 backdrop-blur-md shadow-md"
+            >
+              Cek Slot
+            </button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default HeroSection;
