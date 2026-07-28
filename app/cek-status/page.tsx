@@ -449,14 +449,14 @@ function CekStatusContent() {
               {(currentOrder.status === "Menunggu Konfirmasi" || currentOrder.status === "Dalam Antrian" || currentOrder.status === "Sedang Dikerjakan") && (
                 <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-2xl p-5 flex items-start gap-3">
                   <Clock className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[12px] font-bold text-blue-800 dark:text-blue-300">
-                      {currentOrder.status === "Menunggu Konfirmasi" ? "Menunggu ulasan Admin..." :
+                  <div className="space-y-1">
+                    <p className="text-[12px] font-bold text-blue-900 dark:text-blue-200">
+                      {currentOrder.status === "Menunggu Konfirmasi" ? "Menunggu ulasan awal Admin..." :
                        currentOrder.status === "Dalam Antrian" ? "Pesanan dalam antrian pengerjaan." :
-                       "Tim sedang mengerjakan foto kamu 🎨"}
+                       "Foto kamu sedang dalam proses pengerjaan 🎨"}
                     </p>
-                    <p className="text-[11px] text-blue-600 dark:text-blue-500 mt-1">
-                      Estimasi selesai ±3 hari kerja sejak ACC.
+                    <p className="text-[11px] text-blue-700 dark:text-blue-400 leading-relaxed font-medium">
+                      Estimasi selesai ±3 hari kerja sejak ACC. Mengikuti antrian, tidak dijamin.
                     </p>
                   </div>
                 </div>
