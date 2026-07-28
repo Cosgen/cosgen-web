@@ -392,22 +392,16 @@ function CekStatusContent() {
                 />
               )}
 
-              {/* Payment section */}
-              {(currentOrder.status === "Review" || currentOrder.status === "Menunggu Pembayaran") && (
+              {/* Payment section — Only appears when status is Menunggu Pembayaran */}
+              {currentOrder.status === "Menunggu Pembayaran" && (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                   <div className="px-5 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                     <h3 className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">
                       Pembayaran Midtrans
                     </h3>
-                    {currentOrder.status === "Menunggu Pembayaran" ? (
-                      <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[9px] font-black rounded-full border border-emerald-300 dark:border-emerald-800">
-                        ✓ ACC — Terbuka
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-[9px] font-black rounded-full border border-amber-300 dark:border-amber-800">
-                        🔒 Terkunci (Sedang Di-Review Admin)
-                      </span>
-                    )}
+                    <span className="px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[9px] font-black rounded-full border border-emerald-300 dark:border-emerald-800">
+                      ✓ ACC Admin — Pembayaran Terbuka
+                    </span>
                   </div>
                   <div className="p-5 space-y-3">
                     <OrderInvoiceSummary
@@ -418,25 +412,11 @@ function CekStatusContent() {
                     />
                     <button
                       type="button"
-                      disabled={currentOrder.status !== "Menunggu Pembayaran"}
                       onClick={() => setSnapModalOpen(true)}
-                      className={`w-full py-3.5 rounded-xl font-bold text-[12px] transition-all flex items-center justify-center gap-2 ${
-                        currentOrder.status === "Menunggu Pembayaran"
-                          ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 hover:scale-[1.01] cursor-pointer"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700"
-                      }`}
+                      className="w-full py-3.5 rounded-xl font-bold text-[12px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition-all hover:scale-[1.01] cursor-pointer flex items-center justify-center gap-2"
                     >
-                      {currentOrder.status === "Menunggu Pembayaran" ? (
-                        <>
-                          <DollarSign className="w-4 h-4 text-emerald-300" />
-                          <span>Bayar Sekarang (Midtrans Snap / QRIS / VA)</span>
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-4 h-4 text-slate-400" />
-                          <span>🔒 Pembayaran Terkunci (Sedang Di-Review Admin)</span>
-                        </>
-                      )}
+                      <DollarSign className="w-4 h-4 text-emerald-300" />
+                      <span>Bayar Sekarang (Midtrans Snap / QRIS / VA)</span>
                     </button>
                   </div>
                 </div>
