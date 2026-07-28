@@ -13,6 +13,7 @@ import {
   Folder,
   DollarSign,
   Circle,
+  FileQuestion,
 } from "lucide-react";
 import { LandingNavbar } from "@/components/landing/navbar";
 import { LandingFooter } from "@/components/landing/footer";
@@ -210,6 +211,7 @@ function CekStatusContent() {
   const [inputCode, setInputCode] = useState(initialCode);
   const [allOrders, setAllOrders] = useState<OrderData[]>([]);
   const [currentOrder, setCurrentOrder] = useState<OrderData | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const [snapModalOpen, setSnapModalOpen] = useState(false);
   const [revisionChatOpen, setRevisionChatOpen] = useState(false);
 
@@ -217,12 +219,20 @@ function CekStatusContent() {
     const fetchOrders = () => {
       const orders = getStoredOrders();
       setAllOrders(orders);
-      const target = (inputCode || initialCode || "ORD-3302").trim().toUpperCase();
-      const found = orders.find(
-        (o) => o.code.toUpperCase() === target || (o.officialCode && o.officialCode.toUpperCase() === target)
-      );
-      if (found) setCurrentOrder(found);
-      else if (orders.length > 0) setCurrentOrder(orders[2] || orders[0]);
+
+      const target = (inputCode || initialCode).trim().toUpperCase();
+      if (target) {
+        const found = orders.find(
+          (o) => o.code.toUpperCase() === target || (o.officialCode && o.officialCode.toUpperCase() === target)
+        );
+        if (found) {
+          setCurrentOrder(found);
+        } else {
+          setCurrentOrder(null);
+        }
+      } else {
+        setCurrentOrder(null);
+      }
     };
 
     fetchOrders();
@@ -237,14 +247,22 @@ function CekStatusContent() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setHasSearched(true);
     const clean = inputCode.trim().toUpperCase();
-    if (!clean) return;
+    if (!clean) {
+      setCurrentOrder(null);
+      return;
+    }
     const orders = getStoredOrders();
     const found = orders.find(
       (o) => o.code.toUpperCase() === clean || (o.officialCode && o.officialCode.toUpperCase() === clean)
     );
-    if (found) setCurrentOrder(found);
-    else alert(`Kode pesanan "${clean}" tidak ditemukan dalam database.`);
+    if (found) {
+      setCurrentOrder(found);
+    } else {
+      setCurrentOrder(null);
+      alert(`Kode pesanan "${clean}" tidak ditemukan.`);
+    }
   };
 
   return (
@@ -268,7 +286,7 @@ function CekStatusContent() {
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Masukkan Kode: REQ-8942 / ORD-3302"
+            placeholder="Ketik Kode: REQ-8942 / ORD-3302"
             value={inputCode}
             onChange={(e) => setInputCode(e.target.value)}
             className="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-2xl text-[12px] font-mono font-bold uppercase focus:ring-2 focus:ring-blue-600/20 focus:border-blue-400 focus:outline-none shadow-sm placeholder-slate-400 placeholder:normal-case placeholder:font-sans placeholder:font-normal"
@@ -276,11 +294,34 @@ function CekStatusContent() {
         </div>
         <button
           type="submit"
-          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[12px] font-bold shadow-md shadow-blue-600/20 shrink-0 transition-all hover:scale-[1.02]"
+          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[12px] font-bold shadow-md shadow-blue-600/20 shrink-0 transition-all hover:scale-[1.02] active:scale-95"
         >
           Cari
         </button>
       </form>
+
+      {/* BLANK / EMPTY STATE when no order is searched */}
+      {!currentOrder && (
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 sm:p-10 text-center border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 max-w-md mx-auto my-6">
+          <div className="w-14 h-14 bg-blue-50 dark:bg-blue-950/60 rounded-2xl flex items-center justify-center mx-auto text-blue-600 dark:text-blue-400 shadow-inner">
+            <Search className="w-7 h-7" />
+          </div>
+          <div className="space-y-1.5">
+            <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
+              {hasSearched ? "Pesanan Tidak Ditemukan" : "Masukkan Kode Pesanan Kamu"}
+            </h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              {hasSearched
+                ? `Kode "${inputCode}" belum terdaftar. Pastikan kamu mengetik Kode REQ-XXXX atau ORD-XXXX dengan benar.`
+                : "Ketik Kode REQ-XXXX atau ORD-XXXX pada kolom pencarian di atas untuk memantau progress pengerjaan foto kamu."}
+            </p>
+          </div>
+          <div className="pt-2 text-[10px] text-slate-400 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-1.5 font-medium">
+            <Clock className="w-3.5 h-3.5 text-blue-500" />
+            <span>Kode pesanan kamu didapatkan setelah mengisi Form Pemesanan.</span>
+          </div>
+        </div>
+      )}
 
       {/* Order status display */}
       {currentOrder && (

@@ -6,6 +6,8 @@ import { CustomerStep1Form } from "./customer-step1-form";
 import { OrderStep2Form, OrderGroup } from "./order-step2-form";
 import { OrderSuccessScreen } from "./order-success-screen";
 import { TermsConditionsModal } from "./terms-conditions-modal";
+import { getStoredOrders, saveOrdersToStorage, OrderData } from "@/lib/order-store";
+import { INITIAL_PACKAGES } from "@/app/admin/item-jasa/page";
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -21,7 +23,7 @@ export function OrderModal({
   // Step 0: T&C, Step 1: Customer Info, Step 2: Order Detail, Step 3: Success REQ
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
 
-  // Selected package state (user can change inside form)
+  // Selected package state
   const [currentPackage, setCurrentPackage] = useState(initialPackage);
 
   // Step 1 State
@@ -48,9 +50,49 @@ export function OrderModal({
 
   const handleStep2Submit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 1. Generate unique REQ Code
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const code = `REQ-${randomNum}`;
     setReqCode(code);
+
+    // 2. Calculate Package Price & Discounts
+    const pkgData = INITIAL_PACKAGES.find((p) => p.name === currentPackage) || INITIAL_PACKAGES[1];
+    const basePrice = pkgData?.price || 650000;
+    const adminDiscountPct = pkgData?.discountPercent || 0;
+    const isPromoApplied = promoCode.trim().toUpperCase() === "COSGENFIRST";
+    const promoDiscountPct = isPromoApplied ? 15 : 0;
+    const totalDiscountPct = Math.min(100, adminDiscountPct + promoDiscountPct);
+    const discountAmount = Math.round(basePrice * (totalDiscountPct / 100));
+    const calculatedTotal = Math.max(0, basePrice - discountAmount);
+
+    const totalPhotoCount = orderGroups.reduce((sum, g) => sum + (g.photoCount || 1), 0);
+    const compiledBrief = orderGroups
+      .map((g, idx) => `[Foto ${idx + 1}] Karakter: ${g.characterName || "-"}. Brief: ${g.brief || "-"}`)
+      .join(" | ");
+
+    // 3. Create & Save New Order to Storage / DB
+    const newOrder: OrderData = {
+      id: `ord-${Date.now()}`,
+      code: code,
+      tempCode: code,
+      customerName: nickname.trim() || "Pelanggan Baru",
+      whatsapp: whatsapp.trim() || "-",
+      instagram: instagram.trim() || "-",
+      package: currentPackage,
+      photoCount: totalPhotoCount,
+      totalAmount: calculatedTotal,
+      status: "Menunggu Konfirmasi",
+      customerGdriveUrl: customerGdriveUrl || undefined,
+      briefText: compiledBrief,
+      createdAt: new Date().toISOString().replace("T", " ").slice(0, 16),
+    };
+
+    const currentOrders = getStoredOrders();
+    const updatedOrders = [newOrder, ...currentOrders];
+    saveOrdersToStorage(updatedOrders);
+
+    // 4. Move to Success step
     setStep(3);
   };
 
@@ -69,6 +111,7 @@ export function OrderModal({
           <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-100 dark:border-slate-800 relative max-h-[92vh] overflow-y-auto">
             {/* Close Button */}
             <button
+              type="button"
               onClick={onClose}
               className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
