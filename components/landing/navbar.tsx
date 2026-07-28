@@ -17,14 +17,24 @@ export function LandingNavbar({
 }: LandingNavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const isHome = pathname === "/home";
+  const isHome = pathname === "/" || pathname === "/home";
   const isCekStatus = pathname === "/cek-status";
   const isPortfolio = pathname === "/portfolio";
 
-  // On /home, anchors work as same-page scroll
-  // On other pages, prefix with /home
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, hash: string) => {
+    if (typeof window !== "undefined" && isHome) {
+      const cleanId = hash.replace("#", "");
+      const element = document.getElementById(cleanId);
+      if (element) {
+        e.preventDefault();
+        element.scrollIntoView({ behavior: "smooth" });
+        window.history.replaceState(null, "", `/#${cleanId}`);
+      }
+    }
+  };
+
   const getAnchorHref = (hash: string) => {
-    return isHome ? hash : `/home${hash}`;
+    return isHome ? `/#${hash.replace("#", "")}` : `/#${hash.replace("#", "")}`;
   };
 
   return (
@@ -46,22 +56,38 @@ export function LandingNavbar({
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-4 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-          <Link href={getAnchorHref("#portfolio")} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+          <Link
+            href={getAnchorHref("portfolio")}
+            onClick={(e) => handleNavClick(e, "portfolio")}
+            className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
             Portofolio
           </Link>
           <Link href="/portfolio" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1">
             <Layers className="w-3 h-3" /> Galeri
           </Link>
-          <Link href={getAnchorHref("#compare")} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+          <Link
+            href={getAnchorHref("compare")}
+            onClick={(e) => handleNavClick(e, "compare")}
+            className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
             Compare
           </Link>
-          <Link href={getAnchorHref("#pricelist")} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+          <Link
+            href={getAnchorHref("pricelist")}
+            onClick={(e) => handleNavClick(e, "pricelist")}
+            className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
             Paket
           </Link>
           <Link href="/cek-status" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             Cek Status
           </Link>
-          <Link href={getAnchorHref("#faq")} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+          <Link
+            href={getAnchorHref("faq")}
+            onClick={(e) => handleNavClick(e, "faq")}
+            className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
             FAQ
           </Link>
           {!isCekStatus && !isPortfolio && (
@@ -83,7 +109,7 @@ export function LandingNavbar({
               <button
                 type="button"
                 onClick={onOpenSlotChecker}
-                className="px-3 py-1 border border-slate-200 dark:border-slate-700 hover:border-blue-300 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-blue-600 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1"
+                className="px-3 py-1 border border-slate-200 dark:border-slate-700 hover:border-blue-300 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-blue-600 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer"
               >
                 <Calendar className="w-3 h-3 text-blue-600 dark:text-blue-400" /> Cek Slot
               </button>
@@ -92,7 +118,7 @@ export function LandingNavbar({
               <button
                 type="button"
                 onClick={onOpenOrderModal}
-                className="px-3.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg shadow-xs transition-all hover:scale-[1.02] flex items-center gap-1"
+                className="px-3.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg shadow-xs transition-all hover:scale-[1.02] flex items-center gap-1 cursor-pointer"
               >
                 <Sparkles className="w-3 h-3" /> Pesan Sekarang
               </button>
@@ -103,7 +129,7 @@ export function LandingNavbar({
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+            className="md:hidden p-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer"
           >
             {mobileMenuOpen ? <X className="w-4.5 h-4.5" /> : <Menu className="w-4.5 h-4.5" />}
           </button>
@@ -114,12 +140,32 @@ export function LandingNavbar({
       {mobileMenuOpen && (
         <div className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 pt-2 pb-3 space-y-2 text-[11px]">
           <nav className="flex flex-col space-y-1.5 font-semibold text-slate-700 dark:text-slate-300">
-            <Link href={getAnchorHref("#portfolio")} onClick={() => setMobileMenuOpen(false)}>Portofolio</Link>
+            <Link
+              href={getAnchorHref("portfolio")}
+              onClick={(e) => { setMobileMenuOpen(false); handleNavClick(e, "portfolio"); }}
+            >
+              Portofolio
+            </Link>
             <Link href="/portfolio" onClick={() => setMobileMenuOpen(false)}>Galeri Lengkap</Link>
-            <Link href={getAnchorHref("#compare")} onClick={() => setMobileMenuOpen(false)}>Compare</Link>
-            <Link href={getAnchorHref("#pricelist")} onClick={() => setMobileMenuOpen(false)}>Paket</Link>
+            <Link
+              href={getAnchorHref("compare")}
+              onClick={(e) => { setMobileMenuOpen(false); handleNavClick(e, "compare"); }}
+            >
+              Compare
+            </Link>
+            <Link
+              href={getAnchorHref("pricelist")}
+              onClick={(e) => { setMobileMenuOpen(false); handleNavClick(e, "pricelist"); }}
+            >
+              Paket
+            </Link>
             <Link href="/cek-status" onClick={() => setMobileMenuOpen(false)}>Cek Status</Link>
-            <Link href={getAnchorHref("#faq")} onClick={() => setMobileMenuOpen(false)}>FAQ</Link>
+            <Link
+              href={getAnchorHref("faq")}
+              onClick={(e) => { setMobileMenuOpen(false); handleNavClick(e, "faq"); }}
+            >
+              FAQ
+            </Link>
             {!isCekStatus && !isPortfolio && (
               <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>Admin</Link>
             )}
@@ -129,7 +175,7 @@ export function LandingNavbar({
               <button
                 type="button"
                 onClick={() => { setMobileMenuOpen(false); onOpenSlotChecker(); }}
-                className="w-full py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold rounded-lg text-center flex items-center justify-center gap-1"
+                className="w-full py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold rounded-lg text-center flex items-center justify-center gap-1 cursor-pointer"
               >
                 <Calendar className="w-3 h-3 text-blue-600 dark:text-blue-400" /> Cek Slot
               </button>
@@ -138,7 +184,7 @@ export function LandingNavbar({
               <button
                 type="button"
                 onClick={() => { setMobileMenuOpen(false); if (onOpenOrderModal) onOpenOrderModal(); }}
-                className="w-full py-1.5 bg-blue-600 text-white font-bold rounded-lg shadow-xs text-center"
+                className="w-full py-1.5 bg-blue-600 text-white font-bold rounded-lg shadow-xs text-center cursor-pointer"
               >
                 Pesan Sekarang
               </button>

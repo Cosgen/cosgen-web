@@ -5,11 +5,11 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 const NAV_LINKS = [
-  { href: "/home#portfolio", label: "Portofolio" },
+  { href: "/#portfolio", label: "Portofolio" },
   { href: "/portfolio", label: "Galeri Lengkap" },
-  { href: "/home#compare", label: "Compare" },
-  { href: "/home#pricelist", label: "Paket" },
-  { href: "/home#faq", label: "FAQ" },
+  { href: "/#compare", label: "Compare" },
+  { href: "/#pricelist", label: "Paket" },
+  { href: "/#faq", label: "FAQ" },
   { href: "/cek-status", label: "Cek Status" },
 ];
 
