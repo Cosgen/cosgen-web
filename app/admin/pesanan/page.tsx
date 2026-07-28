@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Eye, Download } from "lucide-react";
-import { getStoredOrders, OrderData } from "@/lib/order-store";
+import { Search, Eye, Download, Trash2, Inbox } from "lucide-react";
+import { getStoredOrders, saveOrdersToStorage, OrderData, clearAllOrders } from "@/lib/order-store";
 import { DownloadInvoiceButton } from "@/components/admin/download-invoice-button";
 
 export type AdminOrder = OrderData;
@@ -24,6 +24,13 @@ export default function AdminPesananListPage() {
       window.removeEventListener("storage", handleUpdate);
     };
   }, []);
+
+  const handleClearOrders = () => {
+    if (confirm("Apakah kamu yakin ingin mengosongkan semua data pesanan? Data yang dihapus tidak dapat dikembalikan.")) {
+      clearAllOrders();
+      setOrders([]);
+    }
+  };
 
   const filteredOrders = orders.filter((o) => {
     const codeToSearch = (o.officialCode || o.code).toLowerCase();
@@ -51,12 +58,23 @@ export default function AdminPesananListPage() {
             </span>
           </div>
           <h1 className="text-xl font-extrabold text-slate-900 tracking-tight mt-1">
-            Daftar Kelola Pesanan Pelanggan (Full View)
+            Daftar Kelola Pesanan Pelanggan
           </h1>
           <p className="text-[11px] text-slate-500">
             Kelola status REQ/ORD, konfirmasi ACC, unduh invoice PDF/TXT, dan atur detail pesanan.
           </p>
         </div>
+
+        {orders.length > 0 && (
+          <button
+            type="button"
+            onClick={handleClearOrders}
+            className="self-start sm:self-auto px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 rounded-lg text-[11px] font-bold inline-flex items-center gap-1.5 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Reset & Kosongkan Data
+          </button>
+        )}
       </div>
 
       {/* Filter and Search Bar */}
@@ -96,77 +114,89 @@ export default function AdminPesananListPage() {
 
       {/* Main Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 text-slate-700 font-semibold uppercase border-b border-slate-100 text-[10px]">
-              <tr>
-                <th className="px-3.5 py-2.5">Kode Order</th>
-                <th className="px-3.5 py-2.5">Nama Pelanggan</th>
-                <th className="px-3.5 py-2.5">Kontak WA</th>
-                <th className="px-3.5 py-2.5">Paket Jasa</th>
-                <th className="px-3.5 py-2.5">Total Biaya</th>
-                <th className="px-3.5 py-2.5">Status Pesanan</th>
-                <th className="px-3.5 py-2.5 text-center">Aksi / Invoice</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-[11px]">
-              {filteredOrders.map((ord) => {
-                const displayCode = ord.officialCode || ord.code;
-                const isReqCode = displayCode.startsWith("REQ-");
+        {filteredOrders.length === 0 ? (
+          <div className="p-12 text-center text-slate-400 space-y-3">
+            <Inbox className="w-10 h-10 mx-auto text-slate-300 stroke-1" />
+            <div className="space-y-1">
+              <p className="font-bold text-xs text-slate-700">Belum Ada Pesanan Masuk</p>
+              <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
+                Database dalam keadaan bersih (kosong). Pesanan baru yang dibuat oleh pelanggan akan otomatis muncul di sini.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-slate-600">
+              <thead className="bg-slate-50 text-slate-700 font-semibold uppercase border-b border-slate-100 text-[10px]">
+                <tr>
+                  <th className="px-3.5 py-2.5">Kode Order</th>
+                  <th className="px-3.5 py-2.5">Nama Pelanggan</th>
+                  <th className="px-3.5 py-2.5">Kontak WA</th>
+                  <th className="px-3.5 py-2.5">Paket Jasa</th>
+                  <th className="px-3.5 py-2.5">Total Biaya</th>
+                  <th className="px-3.5 py-2.5">Status Pesanan</th>
+                  <th className="px-3.5 py-2.5 text-center">Aksi / Invoice</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-[11px]">
+                {filteredOrders.map((ord) => {
+                  const displayCode = ord.officialCode || ord.code;
+                  const isReqCode = displayCode.startsWith("REQ-");
 
-                return (
-                  <tr key={ord.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="px-3.5 py-3 font-mono">
-                      <span
-                        className={`font-bold text-[11px] ${
-                          isReqCode ? "text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200" : "text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200"
-                        }`}
-                      >
-                        {displayCode}
-                      </span>
-                    </td>
-                    <td className="px-3.5 py-3 font-bold text-slate-900">
-                      {ord.customerName}
-                    </td>
-                    <td className="px-3.5 py-3 font-medium">{ord.whatsapp}</td>
-                    <td className="px-3.5 py-3">{ord.package} ({ord.photoCount} Foto)</td>
-                    <td className="px-3.5 py-3 font-bold text-slate-900 font-mono">
-                      Rp {ord.totalAmount.toLocaleString("id-ID")}
-                    </td>
-                    <td className="px-3.5 py-3">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold inline-block ${
-                          ord.status === "Menunggu Konfirmasi"
-                            ? "bg-amber-100 text-amber-800 border border-amber-300"
-                            : ord.status === "Review"
-                            ? "bg-purple-100 text-purple-800 border border-purple-300"
-                            : ord.status === "Selesai"
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                            : ord.status === "Ditolak"
-                            ? "bg-red-100 text-red-800 border border-red-300"
-                            : "bg-blue-100 text-blue-800 border border-blue-300"
-                        }`}
-                      >
-                        {ord.status}
-                      </span>
-                    </td>
-                    <td className="px-3.5 py-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <Link
-                          href={`/admin/pesanan/${ord.id}`}
-                          className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold inline-flex items-center gap-1 shadow-xs text-[10px]"
+                  return (
+                    <tr key={ord.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="px-3.5 py-3 font-mono">
+                        <span
+                          className={`font-bold text-[11px] ${
+                            isReqCode ? "text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200" : "text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200"
+                          }`}
                         >
-                          <Eye className="w-3 h-3" /> Detail
-                        </Link>
-                        <DownloadInvoiceButton order={ord} />
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                          {displayCode}
+                        </span>
+                      </td>
+                      <td className="px-3.5 py-3 font-bold text-slate-900">
+                        {ord.customerName}
+                      </td>
+                      <td className="px-3.5 py-3 font-medium">{ord.whatsapp}</td>
+                      <td className="px-3.5 py-3">{ord.package} ({ord.photoCount} Foto)</td>
+                      <td className="px-3.5 py-3 font-bold text-slate-900 font-mono">
+                        Rp {ord.totalAmount.toLocaleString("id-ID")}
+                      </td>
+                      <td className="px-3.5 py-3">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold inline-block ${
+                            ord.status === "Menunggu Konfirmasi"
+                              ? "bg-amber-100 text-amber-800 border border-amber-300"
+                              : ord.status === "Review"
+                              ? "bg-purple-100 text-purple-800 border border-purple-300"
+                              : ord.status === "Selesai"
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                              : ord.status === "Ditolak"
+                              ? "bg-red-100 text-red-800 border border-red-300"
+                              : "bg-blue-100 text-blue-800 border border-blue-300"
+                          }`}
+                        >
+                          {ord.status}
+                        </span>
+                      </td>
+                      <td className="px-3.5 py-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Link
+                            href={`/admin/pesanan/${ord.id}`}
+                            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold inline-flex items-center gap-1 shadow-xs text-[10px]"
+                          >
+                            <Eye className="w-3 h-3" /> Detail
+                          </Link>
+                          <DownloadInvoiceButton order={ord} />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
