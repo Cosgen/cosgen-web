@@ -5,6 +5,7 @@ export interface HeroContent {
   headline: string;
   subheadline: string;
   ctaText?: string;
+  fontFamily?: string;
 }
 
 export interface FaqItem {

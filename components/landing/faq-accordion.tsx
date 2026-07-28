@@ -47,6 +47,24 @@ export function FAQSection() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
+    // 1. Instant cache load (0ms flicker)
+    try {
+      const cached = localStorage.getItem("cosgen_site_content");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.faqs && Array.isArray(parsed.faqs) && parsed.faqs.length > 0) {
+          const mapped: FAQItem[] = parsed.faqs.map((item: any, idx: number) => ({
+            id: item.id || `faq-${idx}`,
+            category: item.category || "",
+            question: item.question,
+            answer: item.answer,
+          }));
+          setFaqs(mapped);
+        }
+      }
+    } catch (e) {}
+
+    // 2. Fetch fresh content from cloud
     const loadContent = () => {
       fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
         .then((r) => r.json())
@@ -54,11 +72,14 @@ export function FAQSection() {
           if (d.content && Array.isArray(d.content.faqs) && d.content.faqs.length > 0) {
             const mapped: FAQItem[] = d.content.faqs.map((item: any, idx: number) => ({
               id: item.id || `faq-${idx}`,
-              category: item.category || "Pertanyaan Umum",
+              category: item.category || "",
               question: item.question,
               answer: item.answer,
             }));
             setFaqs(mapped);
+            try {
+              localStorage.setItem("cosgen_site_content", JSON.stringify(d.content));
+            } catch (e) {}
           }
         })
         .catch(() => {});
@@ -129,9 +150,6 @@ export function FAQSection() {
                     className="w-full py-5 flex items-start justify-between gap-4 text-left"
                   >
                     <div className="flex-1">
-                      <span className="block text-[9px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-widest mb-1">
-                        {faq.category}
-                      </span>
                       <span className={`text-[13px] sm:text-sm font-bold leading-snug transition-colors ${
                         isOpen
                           ? "text-blue-600 dark:text-blue-400"

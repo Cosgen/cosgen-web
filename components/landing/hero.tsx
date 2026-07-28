@@ -19,8 +19,24 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
   const [headline, setHeadline] = useState("Ubah Foto Cosplay & Karya Kreatif Jadi Mahakarya Epik");
   const [subheadline, setSubheadline] = useState("Layanan editing visual profesional untuk Cosplay, Generasi AI, & Background Premium dengan sistem alur pemesanan transparan.");
   const [ctaText, setCtaText] = useState("Pesan Jasa Edit Sekarang");
+  const [fontFamily, setFontFamily] = useState("sans");
 
   useEffect(() => {
+    // 1. Instant cache load (0ms flicker)
+    try {
+      const cached = localStorage.getItem("cosgen_site_content");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.hero) {
+          if (parsed.hero.headline) setHeadline(parsed.hero.headline);
+          if (parsed.hero.subheadline) setSubheadline(parsed.hero.subheadline);
+          if (parsed.hero.ctaText) setCtaText(parsed.hero.ctaText);
+          if (parsed.hero.fontFamily) setFontFamily(parsed.hero.fontFamily);
+        }
+      }
+    } catch (e) {}
+
+    // 2. Fetch fresh content from cloud
     const loadContent = () => {
       fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
         .then((r) => r.json())
@@ -29,6 +45,10 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
             if (d.content.hero.headline) setHeadline(d.content.hero.headline);
             if (d.content.hero.subheadline) setSubheadline(d.content.hero.subheadline);
             if (d.content.hero.ctaText) setCtaText(d.content.hero.ctaText);
+            if (d.content.hero.fontFamily) setFontFamily(d.content.hero.fontFamily);
+            try {
+              localStorage.setItem("cosgen_site_content", JSON.stringify(d.content));
+            } catch (e) {}
           }
         })
         .catch(() => {});
@@ -42,14 +62,29 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
     };
   }, []);
 
+  const getFontStyle = (fontKey: string) => {
+    switch (fontKey) {
+      case "playfair":
+        return "font-playfair italic font-normal";
+      case "poppins":
+        return "font-poppins uppercase tracking-tight font-black";
+      case "serif":
+        return "font-serif-custom italic font-bold";
+      default:
+        return "font-sans font-black";
+    }
+  };
+
   return (
     <section
       className="relative w-full overflow-hidden select-none"
       style={{ height: "100dvh" }}
     >
       <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400;1,500;1,600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,700;1,400&family=Playfair+Display:ital,wght@0,700;1,500&family=Poppins:wght@700;900&display=swap');
         .font-playfair { font-family: 'Playfair Display', serif; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+        .font-serif-custom { font-family: 'Merriweather', serif; }
       ` }} />
 
       {/* ── DESKTOP ONLY: Dark overlay + background image ─────── */}
@@ -131,7 +166,7 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
       {/* ── DESKTOP HERO CONTENT (right-aligned, dark text on image) ── */}
       <div className="hidden md:flex absolute top-[16%] right-12 flex-col items-end text-right z-30 space-y-3 max-w-2xl">
         <h1
-          className="text-4xl lg:text-5xl font-black text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)] leading-tight tracking-tight"
+          className={`text-4xl lg:text-5xl text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)] leading-tight tracking-tight ${getFontStyle(fontFamily)}`}
         >
           {headline}
         </h1>
@@ -185,7 +220,7 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
 
         {/* CTA Headline */}
         <div className="space-y-1">
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-[1.1] text-slate-900 dark:text-white">
+          <h1 className={`text-3xl sm:text-4xl tracking-tight leading-[1.1] text-slate-900 dark:text-white ${getFontStyle(fontFamily)}`}>
             {headline}
           </h1>
           <p className="text-[12px] text-slate-600 dark:text-slate-400 max-w-xs mx-auto leading-relaxed mt-2 font-medium">

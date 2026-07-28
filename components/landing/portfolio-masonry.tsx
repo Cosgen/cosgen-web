@@ -63,6 +63,25 @@ export function PortfolioSection() {
   const [filter, setFilter] = useState<"Semua" | "Regular" | "Background Premium">("Semua");
 
   useEffect(() => {
+    // 1. Instant cache load (0ms flicker)
+    try {
+      const cached = localStorage.getItem("cosgen_site_content");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.portfolio && Array.isArray(parsed.portfolio) && parsed.portfolio.length > 0) {
+          const mapped: PortfolioItem[] = parsed.portfolio.map((p: any, idx: number) => ({
+            id: p.id || `p-${idx}`,
+            title: p.title,
+            category: p.category === "Background Premium" ? "Background Premium" : "Regular",
+            imageUrl: p.image || p.imageUrl || "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&auto=format&fit=crop&q=80",
+            aspectRatio: idx % 2 === 0 ? "portrait" : "landscape",
+          }));
+          setItems(mapped);
+        }
+      }
+    } catch (e) {}
+
+    // 2. Fetch fresh content from cloud
     const loadContent = () => {
       fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
         .then((r) => r.json())
@@ -76,6 +95,9 @@ export function PortfolioSection() {
               aspectRatio: idx % 2 === 0 ? "portrait" : "landscape",
             }));
             setItems(mapped);
+            try {
+              localStorage.setItem("cosgen_site_content", JSON.stringify(d.content));
+            } catch (e) {}
           }
         })
         .catch(() => {});

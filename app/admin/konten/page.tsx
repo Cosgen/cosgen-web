@@ -240,6 +240,22 @@ export default function AdminContentManagementPage() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
+                Gaya Font Headline Utama & Sub-Headline
+              </label>
+              <select
+                value={hero.fontFamily || "sans"}
+                onChange={(e) => setHero({ ...hero, fontFamily: e.target.value })}
+                className="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold focus:ring-2 focus:ring-blue-600/20 focus:outline-none cursor-pointer"
+              >
+                <option value="sans">Sans-Serif Modern (Inter / Outfit / Clean)</option>
+                <option value="playfair">Playfair Display (Serif Classic Epik)</option>
+                <option value="poppins">Poppins / Montserrat (Cinematic Bold Display)</option>
+                <option value="serif">Merriweather / Georgia (Elegant Serif)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Teks Tombol CTA Utama
               </label>
               <input
