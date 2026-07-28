@@ -21,7 +21,7 @@ import { OrderInvoiceSummary } from "@/components/landing/order-invoice-summary"
 import { MidtransSnapModal } from "@/components/landing/midtrans-snap-modal";
 import { OrderRevisionChat } from "@/components/landing/order-revision-chat";
 import { ReviewStatusBanner } from "@/components/landing/review-status-banner";
-import { getStoredOrders, OrderData, updateSingleOrder } from "@/lib/order-store";
+import { getStoredOrders, OrderData, updateSingleOrder, syncGlobalOrdersFromServer } from "@/lib/order-store";
 
 // ── Roadmap steps definition ──────────────────────────────────────────────────
 const ROADMAP_STEPS = [
@@ -236,6 +236,7 @@ function CekStatusContent() {
     };
 
     fetchOrders();
+    syncGlobalOrdersFromServer().then(() => fetchOrders());
     const handleUpdate = () => fetchOrders();
     window.addEventListener("cosgen_orders_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);

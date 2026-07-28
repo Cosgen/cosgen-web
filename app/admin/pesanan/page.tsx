@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, Eye, Download, Trash2, Inbox } from "lucide-react";
-import { getStoredOrders, saveOrdersToStorage, OrderData, clearAllOrders } from "@/lib/order-store";
+import { getStoredOrders, saveOrdersToStorage, OrderData, clearAllOrders, syncGlobalOrdersFromServer } from "@/lib/order-store";
 import { DownloadInvoiceButton } from "@/components/admin/download-invoice-button";
 
 export type AdminOrder = OrderData;
@@ -16,6 +16,9 @@ export default function AdminPesananListPage() {
 
   useEffect(() => {
     setOrders(getStoredOrders());
+    syncGlobalOrdersFromServer().then((latest) => {
+      if (latest && Array.isArray(latest)) setOrders(latest);
+    });
     const handleUpdate = () => setOrders(getStoredOrders());
     window.addEventListener("cosgen_orders_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
