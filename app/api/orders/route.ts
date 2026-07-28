@@ -19,7 +19,9 @@ export async function GET() {
     if (supabase) {
       const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
       if (!error && data && Array.isArray(data)) {
-        const mappedOrders: OrderData[] = data.map((d: any) => ({
+        const mappedOrders: OrderData[] = data
+          .filter((d: any) => !d.id?.startsWith("_config_") && d.code !== "_SYSTEM_CONFIG_")
+          .map((d: any) => ({
           id: d.id,
           code: d.code,
           officialCode: d.official_code || d.officialCode || d.code,
