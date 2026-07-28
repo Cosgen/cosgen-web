@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Sparkles } from "lucide-react";
+import { getStoredOrders, syncGlobalOrdersFromServer } from "@/lib/order-store";
 
 interface SlotAvailabilityCheckerProps {
   isOpen: boolean;
@@ -11,17 +12,30 @@ interface SlotAvailabilityCheckerProps {
 
 export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: SlotAvailabilityCheckerProps) {
   const [totalSlots, setTotalSlots] = useState(25);
-  const [usedSlots] = useState(17);
-  const [holidays, setHolidays] = useState<number[]>([5, 12, 17, 26]);
+  const [usedSlots, setUsedSlots] = useState(0);
+  const [holidays, setHolidays] = useState<number[]>([]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
+    // 1. Calculate real active orders
+    const orders = getStoredOrders();
+    setUsedSlots(orders.length);
+
+    syncGlobalOrdersFromServer().then((latest) => {
+      if (latest && Array.isArray(latest)) setUsedSlots(latest.length);
+    });
+
+    // 2. Load admin scheduler settings
     const saved = localStorage.getItem("cosgen_scheduler_data");
     if (saved) {
       try {
         const p = JSON.parse(saved);
         if (p.totalSlots) setTotalSlots(p.totalSlots);
-        if (p.holidays) setHolidays(p.holidays);
-      } catch (e) { console.error(e); }
+        if (p.holidays && Array.isArray(p.holidays)) setHolidays(p.holidays);
+      } catch (e) {
+        console.error(e);
+      }
     }
   }, [isOpen]);
 

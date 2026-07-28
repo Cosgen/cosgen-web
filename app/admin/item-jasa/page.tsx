@@ -84,6 +84,7 @@ export default function AdminItemJasaPage() {
   const saveToStorage = (updated: ServicePackage[]) => {
     setPackages(updated);
     localStorage.setItem("cosgen_pricelist_packages", JSON.stringify(updated));
+    window.dispatchEvent(new Event("cosgen_pricelist_updated"));
   };
 
   const handleToggleActive = (id: string) => {

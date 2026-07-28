@@ -12,10 +12,19 @@ export function PricelistSection({ onSelectPackage }: PricelistSectionProps) {
   const [packages, setPackages] = useState<ServicePackage[]>(INITIAL_PACKAGES);
 
   useEffect(() => {
-    const saved = localStorage.getItem("cosgen_pricelist_packages");
-    if (saved) {
-      try { setPackages(JSON.parse(saved)); } catch (e) { console.error(e); }
-    }
+    const loadPackages = () => {
+      const saved = localStorage.getItem("cosgen_pricelist_packages");
+      if (saved) {
+        try { setPackages(JSON.parse(saved)); } catch (e) { console.error(e); }
+      }
+    };
+    loadPackages();
+    window.addEventListener("cosgen_pricelist_updated", loadPackages);
+    window.addEventListener("storage", loadPackages);
+    return () => {
+      window.removeEventListener("cosgen_pricelist_updated", loadPackages);
+      window.removeEventListener("storage", loadPackages);
+    };
   }, []);
 
   const activePackages = packages.filter((p) => p.isActive);
