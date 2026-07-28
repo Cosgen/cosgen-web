@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       const supabase = getSupabaseClient();
       if (supabase) {
         try {
-          await supabase.from("orders").upsert({
+          const { error: upsertErr } = await supabase.from("orders").upsert({
             id: order.id,
             code: order.code,
             official_code: order.officialCode || order.code,
@@ -105,12 +105,13 @@ export async function POST(request: Request) {
             photo_count: order.photoCount,
             total_amount: order.totalAmount,
             status: order.status,
-            customer_gdrive_url: order.customerGdriveUrl,
-            brief_text: order.briefText,
-            created_at: order.createdAt,
+            customer_gdrive_url: order.customerGdriveUrl || null,
+            brief_text: order.briefText || null,
+            created_at: new Date().toISOString(),
           });
+          if (upsertErr) console.error("Supabase upsert error:", upsertErr);
         } catch (e) {
-          console.warn("Supabase upsert notice:", e);
+          console.warn("Supabase upsert exception:", e);
         }
       }
 

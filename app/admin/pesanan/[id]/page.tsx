@@ -52,8 +52,9 @@ export default function AdminOrderDetailPage() {
   if (!order) return null;
 
   const saveChanges = (partial: Partial<OrderData>) => {
-    const updated = updateSingleOrder(order.id, partial);
-    if (updated) setOrder(updated);
+    updateSingleOrder(order.id, partial).then((updated) => {
+      if (updated) setOrder(updated);
+    });
     setSavedStatusNotice(true);
     setTimeout(() => setSavedStatusNotice(false), 2500);
   };

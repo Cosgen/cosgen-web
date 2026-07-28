@@ -31,24 +31,45 @@ export interface OrderData {
 
 export const INITIAL_SHARED_ORDERS: OrderData[] = [];
 
-// Fetch latest global orders from server API (Supabase as source of truth)
+// Helper to merge two lists of orders cleanly without duplicates
+export function mergeOrders(primary: OrderData[], secondary: OrderData[]): OrderData[] {
+  const map = new Map<string, OrderData>();
+  
+  // Add primary (server) orders first
+  primary.forEach((o) => {
+    if (o.id) map.set(o.id, o);
+  });
+
+  // Add secondary (local) orders if not present
+  secondary.forEach((o) => {
+    if (o.id && !map.has(o.id)) {
+      map.set(o.id, o);
+    }
+  });
+
+  return Array.from(map.values());
+}
+
+// Fetch latest global orders from server API (Supabase) and merge with local
 export async function syncGlobalOrdersFromServer(): Promise<OrderData[]> {
+  const localOrders = getStoredOrders();
   try {
     const res = await fetch("/api/orders", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       if (data.orders && Array.isArray(data.orders)) {
+        const merged = mergeOrders(data.orders, localOrders);
         if (typeof window !== "undefined") {
-          localStorage.setItem("cosgen_admin_orders", JSON.stringify(data.orders));
+          localStorage.setItem("cosgen_admin_orders", JSON.stringify(merged));
           window.dispatchEvent(new Event("cosgen_orders_updated"));
         }
-        return data.orders;
+        return merged;
       }
     }
   } catch (err) {
     console.warn("Global order sync warning:", err);
   }
-  return getStoredOrders();
+  return localOrders;
 }
 
 export function getStoredOrders(): OrderData[] {
@@ -72,60 +93,80 @@ export function saveOrdersToStorage(orders: OrderData[]) {
   window.dispatchEvent(new Event("cosgen_orders_updated"));
 }
 
-export function saveNewSingleOrder(newOrder: OrderData) {
+export async function saveNewSingleOrder(newOrder: OrderData): Promise<OrderData[]> {
   const current = getStoredOrders();
-  const updated = [newOrder, ...current];
+  const exists = current.some((o) => o.id === newOrder.id || o.code === newOrder.code);
+  const updated = exists ? current : [newOrder, ...current];
   saveOrdersToStorage(updated);
 
   try {
-    fetch("/api/orders", {
+    const res = await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "create", order: newOrder }),
-    }).catch(() => {});
-  } catch {}
+    });
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json.orders && Array.isArray(json.orders)) {
+        const merged = mergeOrders(json.orders, updated);
+        saveOrdersToStorage(merged);
+        return merged;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to save order to global server API:", err);
+  }
+
+  return updated;
 }
 
-export function updateSingleOrder(orderId: string, partial: Partial<OrderData>) {
+export async function updateSingleOrder(orderId: string, partial: Partial<OrderData>) {
   const current = getStoredOrders();
   const updated = current.map((o) => (o.id === orderId ? { ...o, ...partial } : o));
   saveOrdersToStorage(updated);
 
   try {
-    fetch("/api/orders", {
+    await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "update", orderId, partial }),
-    }).catch(() => {});
-  } catch {}
+    });
+  } catch (err) {
+    console.error("Failed to update order on server API:", err);
+  }
 
   return updated.find((o) => o.id === orderId);
 }
 
-export function deleteSingleOrder(orderId: string) {
+export async function deleteSingleOrder(orderId: string) {
   const current = getStoredOrders();
   const updated = current.filter((o) => o.id !== orderId);
   saveOrdersToStorage(updated);
 
   try {
-    fetch("/api/orders", {
+    await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "delete", orderId }),
-    }).catch(() => {});
-  } catch {}
+    });
+  } catch (err) {
+    console.error("Failed to delete order on server API:", err);
+  }
 }
 
-export function clearAllOrders() {
+export async function clearAllOrders() {
   if (typeof window === "undefined") return;
   localStorage.setItem("cosgen_admin_orders", JSON.stringify([]));
   window.dispatchEvent(new Event("cosgen_orders_updated"));
 
   try {
-    fetch("/api/orders", {
+    await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "clear" }),
-    }).catch(() => {});
-  } catch {}
+    });
+  } catch (err) {
+    console.error("Failed to clear orders on server API:", err);
+  }
 }
