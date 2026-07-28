@@ -41,6 +41,15 @@ export function CustomerStep1Form({
           console.error(e);
         }
       }
+      fetch(`/api/pricelist?t=${Date.now()}`, { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.packages && Array.isArray(d.packages) && d.packages.length > 0) {
+            setPackages(d.packages);
+            localStorage.setItem("cosgen_pricelist_packages", JSON.stringify(d.packages));
+          }
+        })
+        .catch(() => {});
     };
     loadPackages();
     window.addEventListener("cosgen_pricelist_updated", loadPackages);

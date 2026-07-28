@@ -16,7 +16,24 @@ export async function GET() {
   try {
     const supabase = getSupabaseClient();
     if (supabase) {
-      // 1. Try dedicated pricelist_packages table
+      // 1. Check Universal Config in Supabase orders table
+      const { data: configRow, error: configErr } = await supabase
+        .from("orders")
+        .select("brief_text")
+        .eq("id", "_config_pricelist")
+        .maybeSingle();
+
+      if (!configErr && configRow && configRow.brief_text) {
+        try {
+          const parsed = JSON.parse(configRow.brief_text);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            globalServerPackages = parsed;
+            return NextResponse.json({ packages: parsed, source: "supabase_kv" });
+          }
+        } catch {}
+      }
+
+      // 2. Try dedicated pricelist_packages table
       try {
         const { data, error } = await supabase.from("pricelist_packages").select("*").order("id", { ascending: true });
         if (!error && data && Array.isArray(data) && data.length > 0) {
@@ -36,22 +53,18 @@ export async function GET() {
         }
       } catch {}
 
-      // 2. Universal Config Fallback inside Supabase orders table
-      const { data: configRow, error: configErr } = await supabase
-        .from("orders")
-        .select("brief_text")
-        .eq("id", "_config_pricelist")
-        .maybeSingle();
-
-      if (!configErr && configRow && configRow.brief_text) {
-        try {
-          const parsed = JSON.parse(configRow.brief_text);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            globalServerPackages = parsed;
-            return NextResponse.json({ packages: parsed, source: "supabase_kv" });
-          }
-        } catch {}
-      }
+      // 3. Auto-seed INITIAL_PACKAGES to Supabase on first run
+      try {
+        await supabase.from("orders").upsert({
+          id: "_config_pricelist",
+          code: "_SYSTEM_CONFIG_",
+          official_code: "_SYSTEM_CONFIG_",
+          temp_code: "_SYSTEM_CONFIG_",
+          customer_name: "SYSTEM_CONFIG",
+          brief_text: JSON.stringify(INITIAL_PACKAGES),
+          created_at: new Date().toISOString(),
+        });
+      } catch {}
     }
   } catch (err) {
     console.warn("Supabase pricelist fetch notice:", err);
@@ -73,7 +86,7 @@ export async function POST(request: Request) {
       if (supabase) {
         // 1. Universal Config Save inside Supabase
         try {
-          await supabase.from("orders").upsert({
+          const res = await supabase.from("orders").upsert({
             id: "_config_pricelist",
             code: "_SYSTEM_CONFIG_",
             official_code: "_SYSTEM_CONFIG_",
@@ -82,6 +95,7 @@ export async function POST(request: Request) {
             brief_text: JSON.stringify(packages),
             created_at: new Date().toISOString(),
           });
+          if (res.error) console.error("Supabase KV save error:", res.error);
         } catch (e) {
           console.warn("Supabase pricelist KV save notice:", e);
         }

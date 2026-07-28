@@ -17,10 +17,10 @@ export function PricelistSection({ onSelectPackage }: PricelistSectionProps) {
       if (saved) {
         try { setPackages(JSON.parse(saved)); } catch (e) { console.error(e); }
       }
-      fetch("/api/pricelist", { cache: "no-store" })
+      fetch(`/api/pricelist?t=${Date.now()}`, { cache: "no-store" })
         .then((r) => r.json())
         .then((d) => {
-          if (d.packages && Array.isArray(d.packages)) {
+          if (d.packages && Array.isArray(d.packages) && d.packages.length > 0) {
             setPackages(d.packages);
             localStorage.setItem("cosgen_pricelist_packages", JSON.stringify(d.packages));
           }

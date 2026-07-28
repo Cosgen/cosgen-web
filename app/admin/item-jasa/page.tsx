@@ -80,10 +80,10 @@ export default function AdminItemJasaPage() {
       }
     }
 
-    fetch("/api/pricelist", { cache: "no-store" })
+    fetch(`/api/pricelist?t=${Date.now()}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
-        if (d.packages && Array.isArray(d.packages)) {
+        if (d.packages && Array.isArray(d.packages) && d.packages.length > 0) {
           setPackages(d.packages);
           localStorage.setItem("cosgen_pricelist_packages", JSON.stringify(d.packages));
         }
@@ -91,17 +91,17 @@ export default function AdminItemJasaPage() {
       .catch(() => {});
   }, []);
 
-  const saveToStorage = (updated: ServicePackage[]) => {
+  const saveToStorage = async (updated: ServicePackage[]) => {
     setPackages(updated);
     localStorage.setItem("cosgen_pricelist_packages", JSON.stringify(updated));
     window.dispatchEvent(new Event("cosgen_pricelist_updated"));
 
     try {
-      fetch("/api/pricelist", {
+      await fetch("/api/pricelist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ packages: updated }),
-      }).catch(() => {});
+      });
     } catch {}
   };
 
