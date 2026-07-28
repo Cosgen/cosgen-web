@@ -2,24 +2,45 @@
 
 import React, { useState, useEffect } from "react";
 import { Calendar, Save, Plus, Minus, CheckCircle2 } from "lucide-react";
+import { getStoredOrders, syncGlobalOrdersFromServer } from "@/lib/order-store";
 
 export default function AdminSchedulerPage() {
   const [totalSlots, setTotalSlots] = useState<number>(25);
-  const [usedSlots] = useState<number>(17);
-  const [holidays, setHolidays] = useState<number[]>([5, 12, 17, 26]);
+  const [usedSlots, setUsedSlots] = useState<number>(0);
+  const [holidays, setHolidays] = useState<number[]>([]);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
+    // 1. Calculate active used slots dynamically from real orders in database
+    const orders = getStoredOrders();
+    setUsedSlots(orders.length);
+
+    syncGlobalOrdersFromServer().then((latest) => {
+      if (latest && Array.isArray(latest)) setUsedSlots(latest.length);
+    });
+
+    const handleUpdate = () => {
+      setUsedSlots(getStoredOrders().length);
+    };
+    window.addEventListener("cosgen_orders_updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
+    // 2. Load custom scheduler settings
     const savedData = localStorage.getItem("cosgen_scheduler_data");
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
         if (parsed.totalSlots) setTotalSlots(parsed.totalSlots);
-        if (parsed.holidays) setHolidays(parsed.holidays);
+        if (parsed.holidays && Array.isArray(parsed.holidays)) setHolidays(parsed.holidays);
       } catch (e) {
         console.error(e);
       }
     }
+
+    return () => {
+      window.removeEventListener("cosgen_orders_updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
   }, []);
 
   const toggleHoliday = (day: number) => {
@@ -50,14 +71,14 @@ export default function AdminSchedulerPage() {
             Admin Portal
           </span>
           <span className="px-2 py-0.5 bg-slate-200 text-slate-700 text-[9px] font-bold rounded-full">
-            Scheduler & Kuota Slot
+            Scheduler & Kuota Slot Terintegrasi
           </span>
         </div>
         <h1 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight mt-0.5">
           Pengaturan Slot & Kalender Libur
         </h1>
         <p className="text-[10px] sm:text-[11px] text-slate-500">
-          Atur jumlah kuota slot bulan ini dan klik tanggal pada kalender untuk menandai hari libur pengerjaan.
+          Atur kuota slot pengerjaan bulan ini. Terhubung otomatis dengan jumlah pesanan pelanggan yang masuk.
         </p>
       </div>
 
@@ -68,11 +89,11 @@ export default function AdminSchedulerPage() {
         </div>
       )}
 
-      {/* Slot Metrics Box (Consistent Square / Box Cards) */}
+      {/* Slot Metrics Box */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         <div className="bg-white p-3 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-center items-center text-center space-y-1.5 aspect-[1.3/1]">
           <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider block">
-            Total Kuota Slot
+            Total Kuota Slot Studio
           </span>
           <span className="text-xl font-black text-slate-900 font-mono">{totalSlots} Slot</span>
           <div className="flex items-center gap-1 pt-0.5">
@@ -98,7 +119,7 @@ export default function AdminSchedulerPage() {
             Sisa Slot Tersedia
           </span>
           <div className="text-xl font-black text-emerald-600 font-mono">{remainingSlots} Slot</div>
-          <p className="text-[9px] text-slate-400">Terpakai: {usedSlots} pesanan</p>
+          <p className="text-[9px] text-slate-400">Terpakai: {usedSlots} pesanan aktif</p>
         </div>
 
         <div className="bg-white p-3 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-center items-center text-center space-y-1 aspect-[1.3/1]">
@@ -106,11 +127,11 @@ export default function AdminSchedulerPage() {
             Hari Libur Ditandai
           </span>
           <div className="text-xl font-black text-red-600 font-mono">{holidays.length} Hari</div>
-          <p className="text-[9px] text-slate-400">Klik tanggal untuk toggle</p>
+          <p className="text-[9px] text-slate-400">Klik tanggal untuk toggle libur</p>
         </div>
       </div>
 
-      {/* Calendar Grid Box (Square Days) */}
+      {/* Calendar Grid Box */}
       <form onSubmit={handleSaveScheduler} className="bg-white rounded-xl p-4 border border-slate-200/90 shadow-xs space-y-3">
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
           <div className="flex items-center gap-1.5">
@@ -129,7 +150,7 @@ export default function AdminSchedulerPage() {
           </div>
         </div>
 
-        {/* Days Grid (Balanced Square Buttons) */}
+        {/* Days Grid */}
         <div className="grid grid-cols-7 gap-1 text-center">
           {["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].map((d) => (
             <div key={d} className="text-[9px] font-bold text-slate-400 uppercase py-0.5">

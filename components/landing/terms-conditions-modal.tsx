@@ -33,9 +33,9 @@ export function TermsConditionsModal({ isOpen, onClose, onAgree }: TermsConditio
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4">
+    <div className="fixed inset-0 z-[100] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
       {/* Sheet / Dialog */}
-      <div className="bg-white dark:bg-slate-900 w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl flex flex-col max-h-[88vh] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl flex flex-col max-h-[85vh] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden my-auto">
 
         {/* Header — sticky */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800 shrink-0">

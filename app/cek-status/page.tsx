@@ -223,7 +223,10 @@ function CekStatusContent() {
       const target = (inputCode || initialCode).trim().toUpperCase();
       if (target) {
         const found = orders.find(
-          (o) => o.code.toUpperCase() === target || (o.officialCode && o.officialCode.toUpperCase() === target)
+          (o) =>
+            o.code.toUpperCase() === target ||
+            (o.officialCode && o.officialCode.toUpperCase() === target) ||
+            (o.tempCode && o.tempCode.toUpperCase() === target)
         );
         if (found) {
           setCurrentOrder(found);
@@ -256,7 +259,10 @@ function CekStatusContent() {
     }
     const orders = getStoredOrders();
     const found = orders.find(
-      (o) => o.code.toUpperCase() === clean || (o.officialCode && o.officialCode.toUpperCase() === clean)
+      (o) =>
+        o.code.toUpperCase() === clean ||
+        (o.officialCode && o.officialCode.toUpperCase() === clean) ||
+        (o.tempCode && o.tempCode.toUpperCase() === clean)
     );
     if (found) {
       setCurrentOrder(found);
