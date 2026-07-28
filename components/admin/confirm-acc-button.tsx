@@ -20,26 +20,14 @@ export function ConfirmAccButton({
 }: ConfirmAccButtonProps) {
   const [isConfirming, setIsConfirming] = useState(false);
 
-  if (isAccByAdmin || currentStatus === "Menunggu Pembayaran" || currentStatus === "Selesai") {
-    return (
-      <span className="px-4 py-2 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-xs">
-        <Check className="w-4 h-4 text-emerald-600" /> ACC Terkonfirmasi (Pembayaran Terbuka)
-      </span>
-    );
-  }
+  const isAlreadyAcc = isAccByAdmin || currentStatus === "Menunggu Pembayaran" || currentStatus === "Selesai";
 
   const handleConfirm = async () => {
-    if (
-      window.confirm(
-        `Konfirmasi ACC Pelanggan untuk ${orderCode}?\n\nStatus akan berubah menjadi 'Menunggu Pembayaran' dan tombol bayar di sisi pelanggan akan langsung terbuka.`
-      )
-    ) {
-      setIsConfirming(true);
-      try {
-        await onAccSuccess();
-      } finally {
-        setIsConfirming(false);
-      }
+    setIsConfirming(true);
+    try {
+      await onAccSuccess();
+    } finally {
+      setIsConfirming(false);
     }
   };
 
@@ -48,10 +36,18 @@ export function ConfirmAccButton({
       type="button"
       disabled={isConfirming}
       onClick={handleConfirm}
-      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 inline-flex items-center gap-2 transition-all hover:scale-[1.02]"
+      className={`px-5 py-2.5 rounded-xl text-xs font-bold shadow-md inline-flex items-center gap-2 transition-all hover:scale-[1.02] cursor-pointer ${
+        isAlreadyAcc
+          ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
+          : "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20 animate-pulse"
+      }`}
     >
       <ShieldCheck className="w-4 h-4" />
-      <span>Konfirmasi Pelanggan ACC (Buka Kunci Pembayaran)</span>
+      <span>
+        {isAlreadyAcc
+          ? "✓ ACC Terkonfirmasi (Klik Untuk Re-Sync Pembayaran ke Pelanggan)"
+          : "⚡ Setujui / ACC Pelanggan (Buka Kunci Pembayaran)"}
+      </span>
     </button>
   );
 }

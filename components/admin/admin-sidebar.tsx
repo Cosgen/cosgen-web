@@ -44,7 +44,6 @@ export function AdminSidebar() {
     { label: "Kode Promo", href: "/admin/promo", icon: Ticket },
     { label: "Manajemen Content", href: "/admin/konten", icon: Package },
     { label: "Editor T&C", href: "/admin/terms", icon: FileText },
-    { label: "Live Chat & AI", href: "/admin/chat", icon: MessageSquare },
   ];
 
   const sidebarContent = (

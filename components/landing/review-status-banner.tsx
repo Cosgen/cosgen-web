@@ -89,16 +89,6 @@ export function ReviewStatusBanner({
           </svg>
           <span>Diskusi via Instagram DM</span>
         </a>
-
-        {onOpenRevisionChat && (
-          <button
-            type="button"
-            onClick={onOpenRevisionChat}
-            className="px-4 py-2 bg-slate-900 hover:bg-black text-white border border-red-400/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
-          >
-            <MessageCircle className="w-3.5 h-3.5 text-emerald-400" /> Live Chat Web
-          </button>
-        )}
       </div>
     </div>
   );

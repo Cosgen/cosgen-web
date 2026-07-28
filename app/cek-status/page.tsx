@@ -389,7 +389,6 @@ function CekStatusContent() {
                 <ReviewStatusBanner
                   orderCode={currentOrder.officialCode || currentOrder.code}
                   gdriveReviewUrl={currentOrder.gdriveReviewUrl}
-                  onOpenRevisionChat={() => setRevisionChatOpen(true)}
                 />
               )}
 

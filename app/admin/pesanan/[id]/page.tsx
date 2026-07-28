@@ -94,11 +94,14 @@ export default function AdminOrderDetailPage() {
     });
   };
 
-  const handleAccSuccess = () => {
-    saveChanges({
+  const handleAccSuccess = async () => {
+    const updated = await updateSingleOrder(order.id, {
       status: "Menunggu Pembayaran",
       isAccByAdmin: true,
     });
+    if (updated) setOrder(updated);
+    setSavedStatusNotice(true);
+    setTimeout(() => setSavedStatusNotice(false), 2500);
   };
 
   return (
