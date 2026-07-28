@@ -399,13 +399,13 @@ function CekStatusContent() {
                     <h3 className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">
                       Pembayaran Midtrans
                     </h3>
-                    {currentOrder.isAccByAdmin || currentOrder.status === "Menunggu Pembayaran" ? (
+                    {currentOrder.status === "Menunggu Pembayaran" ? (
                       <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[9px] font-black rounded-full border border-emerald-300 dark:border-emerald-800">
                         ✓ ACC — Terbuka
                       </span>
                     ) : (
                       <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-[9px] font-black rounded-full border border-amber-300 dark:border-amber-800">
-                        🔒 Terkunci
+                        🔒 Terkunci (Sedang Di-Review Admin)
                       </span>
                     )}
                   </div>
@@ -418,15 +418,15 @@ function CekStatusContent() {
                     />
                     <button
                       type="button"
-                      disabled={!currentOrder.isAccByAdmin && currentOrder.status !== "Menunggu Pembayaran"}
+                      disabled={currentOrder.status !== "Menunggu Pembayaran"}
                       onClick={() => setSnapModalOpen(true)}
                       className={`w-full py-3.5 rounded-xl font-bold text-[12px] transition-all flex items-center justify-center gap-2 ${
-                        currentOrder.isAccByAdmin || currentOrder.status === "Menunggu Pembayaran"
+                        currentOrder.status === "Menunggu Pembayaran"
                           ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 hover:scale-[1.01] cursor-pointer"
                           : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700"
                       }`}
                     >
-                      {currentOrder.isAccByAdmin || currentOrder.status === "Menunggu Pembayaran" ? (
+                      {currentOrder.status === "Menunggu Pembayaran" ? (
                         <>
                           <DollarSign className="w-4 h-4 text-emerald-300" />
                           <span>Bayar Sekarang (Midtrans Snap / QRIS / VA)</span>
@@ -434,7 +434,7 @@ function CekStatusContent() {
                       ) : (
                         <>
                           <Lock className="w-4 h-4 text-slate-400" />
-                          <span>🔒 Pembayaran Terkunci (Menunggu ACC Admin)</span>
+                          <span>🔒 Pembayaran Terkunci (Sedang Di-Review Admin)</span>
                         </>
                       )}
                     </button>

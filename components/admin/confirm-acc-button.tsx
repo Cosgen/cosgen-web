@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ShieldCheck, Check, Sparkles } from "lucide-react";
+import { ShieldCheck, Check } from "lucide-react";
 
 interface ConfirmAccButtonProps {
   orderId: string;
@@ -20,7 +20,7 @@ export function ConfirmAccButton({
 }: ConfirmAccButtonProps) {
   const [isConfirming, setIsConfirming] = useState(false);
 
-  const isAlreadyAcc = isAccByAdmin || currentStatus === "Menunggu Pembayaran" || currentStatus === "Selesai";
+  const isPaymentUnlocked = currentStatus === "Menunggu Pembayaran" || currentStatus === "Selesai";
 
   const handleConfirm = async () => {
     setIsConfirming(true);
@@ -37,16 +37,16 @@ export function ConfirmAccButton({
       disabled={isConfirming}
       onClick={handleConfirm}
       className={`px-5 py-2.5 rounded-xl text-xs font-bold shadow-md inline-flex items-center gap-2 transition-all hover:scale-[1.02] cursor-pointer ${
-        isAlreadyAcc
+        isPaymentUnlocked
           ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
           : "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20 animate-pulse"
       }`}
     >
       <ShieldCheck className="w-4 h-4" />
       <span>
-        {isAlreadyAcc
-          ? "✓ ACC Terkonfirmasi (Klik Untuk Re-Sync Pembayaran ke Pelanggan)"
-          : "⚡ Setujui / ACC Pelanggan (Buka Kunci Pembayaran)"}
+        {isPaymentUnlocked
+          ? "✓ ACC Terkonfirmasi (Pembayaran Sudah Terbuka di Pelanggan)"
+          : "⚡ ACC Pelanggan Sekarang (Ubah Status ke Menunggu Pembayaran)"}
       </span>
     </button>
   );
