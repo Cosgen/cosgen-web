@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Maximize2, X, ChevronRight } from "lucide-react";
 
@@ -58,11 +58,39 @@ const PORTFOLIO_ITEMS: PortfolioItem[] = [
 ];
 
 export function PortfolioSection() {
+  const [items, setItems] = useState<PortfolioItem[]>(PORTFOLIO_ITEMS);
   const [selectedImage, setSelectedImage] = useState<PortfolioItem | null>(null);
   const [filter, setFilter] = useState<"Semua" | "Regular" | "Background Premium">("Semua");
 
+  useEffect(() => {
+    const loadContent = () => {
+      fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.content && Array.isArray(d.content.portfolio) && d.content.portfolio.length > 0) {
+            const mapped: PortfolioItem[] = d.content.portfolio.map((p: any, idx: number) => ({
+              id: p.id || `p-${idx}`,
+              title: p.title,
+              category: p.category === "Background Premium" ? "Background Premium" : "Regular",
+              imageUrl: p.image || p.imageUrl || "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&auto=format&fit=crop&q=80",
+              aspectRatio: idx % 2 === 0 ? "portrait" : "landscape",
+            }));
+            setItems(mapped);
+          }
+        })
+        .catch(() => {});
+    };
+    loadContent();
+    window.addEventListener("cosgen_content_updated", loadContent);
+    window.addEventListener("storage", loadContent);
+    return () => {
+      window.removeEventListener("cosgen_content_updated", loadContent);
+      window.removeEventListener("storage", loadContent);
+    };
+  }, []);
+
   const filtered =
-    filter === "Semua" ? PORTFOLIO_ITEMS : PORTFOLIO_ITEMS.filter((p) => p.category === filter);
+    filter === "Semua" ? items : items.filter((p) => p.category === filter);
 
   return (
     <section id="portfolio" className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 transition-colors">

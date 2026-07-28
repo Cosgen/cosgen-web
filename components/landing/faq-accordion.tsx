@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Search, Plus, Minus } from "lucide-react";
 
 interface FAQItem {
@@ -42,10 +42,37 @@ const FAQ_LIST: FAQItem[] = [
 ];
 
 export function FAQSection() {
+  const [faqs, setFaqs] = useState<FAQItem[]>(FAQ_LIST);
   const [openId, setOpenId] = useState<string | null>("faq-1");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredFaqs = FAQ_LIST.filter(
+  useEffect(() => {
+    const loadContent = () => {
+      fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.content && Array.isArray(d.content.faqs) && d.content.faqs.length > 0) {
+            const mapped: FAQItem[] = d.content.faqs.map((item: any, idx: number) => ({
+              id: item.id || `faq-${idx}`,
+              category: item.category || "Pertanyaan Umum",
+              question: item.question,
+              answer: item.answer,
+            }));
+            setFaqs(mapped);
+          }
+        })
+        .catch(() => {});
+    };
+    loadContent();
+    window.addEventListener("cosgen_content_updated", loadContent);
+    window.addEventListener("storage", loadContent);
+    return () => {
+      window.removeEventListener("cosgen_content_updated", loadContent);
+      window.removeEventListener("storage", loadContent);
+    };
+  }, []);
+
+  const filteredFaqs = faqs.filter(
     (f) =>
       f.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.answer.toLowerCase().includes(searchQuery.toLowerCase())

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -16,6 +16,31 @@ interface HeroProps {
 
 export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [headline, setHeadline] = useState("Ubah Foto Cosplay & Karya Kreatif Jadi Mahakarya Epik");
+  const [subheadline, setSubheadline] = useState("Layanan editing visual profesional untuk Cosplay, Generasi AI, & Background Premium dengan sistem alur pemesanan transparan.");
+  const [ctaText, setCtaText] = useState("Pesan Jasa Edit Sekarang");
+
+  useEffect(() => {
+    const loadContent = () => {
+      fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.content && d.content.hero) {
+            if (d.content.hero.headline) setHeadline(d.content.hero.headline);
+            if (d.content.hero.subheadline) setSubheadline(d.content.hero.subheadline);
+            if (d.content.hero.ctaText) setCtaText(d.content.hero.ctaText);
+          }
+        })
+        .catch(() => {});
+    };
+    loadContent();
+    window.addEventListener("cosgen_content_updated", loadContent);
+    window.addEventListener("storage", loadContent);
+    return () => {
+      window.removeEventListener("cosgen_content_updated", loadContent);
+      window.removeEventListener("storage", loadContent);
+    };
+  }, []);
 
   return (
     <section
@@ -105,32 +130,28 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
 
       {/* ── DESKTOP HERO CONTENT (right-aligned, dark text on image) ── */}
       <div className="hidden md:flex absolute top-[16%] right-12 flex-col items-end text-right z-30 space-y-3 max-w-2xl">
-        <span
-          className="block font-playfair italic font-normal text-5xl text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)]"
-          style={{ letterSpacing: "-0.04em" }}
+        <h1
+          className="text-4xl lg:text-5xl font-black text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)] leading-tight tracking-tight"
         >
-          Save the World?
-        </span>
-        <span
-          className="block font-normal text-5xl text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)] -mt-1.5"
-          style={{ letterSpacing: "-0.06em" }}
-        >
-          Save the CAT!
-        </span>
+          {headline}
+        </h1>
+        <p className="text-xs lg:text-sm text-white/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] max-w-lg leading-relaxed">
+          {subheadline}
+        </p>
 
-        <div className="flex flex-wrap items-center justify-end gap-2 w-full max-w-sm pt-0.5">
+        <div className="flex flex-wrap items-center justify-end gap-2 w-full max-w-sm pt-1">
           <button
             type="button"
             onClick={onOpenOrderModal}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-5 py-2 rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/30 border border-blue-400/20"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-5 py-2.5 rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/30 border border-blue-400/20 cursor-pointer"
           >
-            Pesan Sekarang
+            {ctaText}
           </button>
           {onOpenSlotChecker && (
             <button
               type="button"
               onClick={onOpenSlotChecker}
-              className="bg-white/10 hover:bg-white/20 border border-white/30 text-white text-xs font-bold px-5 py-2 rounded-full transition-all hover:scale-105 active:scale-95 backdrop-blur-md shadow-md"
+              className="bg-white/10 hover:bg-white/20 border border-white/30 text-white text-xs font-bold px-5 py-2.5 rounded-full transition-all hover:scale-105 active:scale-95 backdrop-blur-md shadow-md cursor-pointer"
             >
               Cek Slot
             </button>
@@ -149,13 +170,6 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>Cek Status
           </span>
-          <span className="text-white/40">•</span>
-          <span className="inline-flex items-center gap-1.5">
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              <circle cx="9" cy="10" r="0.7" fill="currentColor"/><circle cx="12" cy="10" r="0.7" fill="currentColor"/><circle cx="15" cy="10" r="0.7" fill="currentColor"/>
-            </svg>Live Chat
-          </span>
         </div>
       </div>
 
@@ -171,12 +185,11 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
 
         {/* CTA Headline */}
         <div className="space-y-1">
-          <h1 className="text-4xl font-black tracking-tight leading-[1.05] text-slate-900 dark:text-white">
-            Ubah Foto Cosplay<br />
-            <span className="text-blue-600 dark:text-blue-400">Jadi Karya Sinematik</span>
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-[1.1] text-slate-900 dark:text-white">
+            {headline}
           </h1>
-          <p className="text-[13px] text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed mt-2">
-            Edit CGI & VFX berkualitas studio. Slot terbatas, pesan sekarang.
+          <p className="text-[12px] text-slate-600 dark:text-slate-400 max-w-xs mx-auto leading-relaxed mt-2 font-medium">
+            {subheadline}
           </p>
         </div>
 
