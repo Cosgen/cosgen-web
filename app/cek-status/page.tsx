@@ -14,6 +14,7 @@ import {
   DollarSign,
   Circle,
   FileQuestion,
+  Lock,
 } from "lucide-react";
 import { LandingNavbar } from "@/components/landing/navbar";
 import { LandingFooter } from "@/components/landing/footer";
@@ -420,16 +421,23 @@ function CekStatusContent() {
                       type="button"
                       disabled={!currentOrder.isAccByAdmin && currentOrder.status !== "Menunggu Pembayaran"}
                       onClick={() => setSnapModalOpen(true)}
-                      className={`w-full py-3 rounded-xl font-bold text-[12px] transition-all flex items-center justify-center gap-2 ${
+                      className={`w-full py-3.5 rounded-xl font-bold text-[12px] transition-all flex items-center justify-center gap-2 ${
                         currentOrder.isAccByAdmin || currentOrder.status === "Menunggu Pembayaran"
-                          ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 hover:scale-[1.01]"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                          ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 hover:scale-[1.01] cursor-pointer"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700"
                       }`}
                     >
-                      <DollarSign className="w-4 h-4" />
-                      {currentOrder.isAccByAdmin || currentOrder.status === "Menunggu Pembayaran"
-                        ? "Bayar Sekarang (QRIS / VA)"
-                        : "Terkunci — Tunggu ACC Admin"}
+                      {currentOrder.isAccByAdmin || currentOrder.status === "Menunggu Pembayaran" ? (
+                        <>
+                          <DollarSign className="w-4 h-4 text-emerald-300" />
+                          <span>Bayar Sekarang (Midtrans Snap / QRIS / VA)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-4 h-4 text-slate-400" />
+                          <span>🔒 Pembayaran Terkunci (Menunggu ACC Admin)</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

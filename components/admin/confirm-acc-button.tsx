@@ -28,17 +28,18 @@ export function ConfirmAccButton({
     );
   }
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (
       window.confirm(
-        `Konfirmasi ACC Pelanggan untuk ${orderCode}?\n\nStatus akan berubah dari 'Review' menjadi 'Menunggu Pembayaran' dan tombol bayar di sisi pelanggan akan langsung terbuka.`
+        `Konfirmasi ACC Pelanggan untuk ${orderCode}?\n\nStatus akan berubah menjadi 'Menunggu Pembayaran' dan tombol bayar di sisi pelanggan akan langsung terbuka.`
       )
     ) {
       setIsConfirming(true);
-      setTimeout(() => {
+      try {
+        await onAccSuccess();
+      } finally {
         setIsConfirming(false);
-        onAccSuccess();
-      }, 500);
+      }
     }
   };
 

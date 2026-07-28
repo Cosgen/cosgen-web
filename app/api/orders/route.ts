@@ -132,14 +132,21 @@ export async function POST(request: Request) {
         try {
           const dbPartial: any = {};
           if (partial.status !== undefined) dbPartial.status = partial.status;
+          if (partial.code !== undefined) dbPartial.code = partial.code;
           if (partial.officialCode !== undefined) dbPartial.official_code = partial.officialCode;
+          if (partial.tempCode !== undefined) dbPartial.temp_code = partial.tempCode;
           if (partial.isAccByAdmin !== undefined) dbPartial.is_acc_by_admin = partial.isAccByAdmin;
           if (partial.rejectionReason !== undefined) dbPartial.rejection_reason = partial.rejectionReason;
+          if (partial.customerGdriveUrl !== undefined) dbPartial.customer_gdrive_url = partial.customerGdriveUrl;
           if (partial.gdriveReviewUrl !== undefined) dbPartial.gdrive_review_url = partial.gdriveReviewUrl;
           if (partial.gdriveFinalUrl !== undefined) dbPartial.gdrive_final_url = partial.gdriveFinalUrl;
           if (partial.subStatus !== undefined) dbPartial.sub_status = partial.subStatus;
+          if (partial.photoCount !== undefined) dbPartial.photo_count = partial.photoCount;
+          if (partial.totalAmount !== undefined) dbPartial.total_amount = partial.totalAmount;
+          if (partial.briefText !== undefined) dbPartial.brief_text = partial.briefText;
 
-          await supabase.from("orders").update(dbPartial).eq("id", orderId);
+          const res = await supabase.from("orders").update(dbPartial).eq("id", orderId);
+          if (res.error) console.error("Supabase update error:", res.error);
         } catch {}
       }
 
