@@ -12,13 +12,13 @@ function getSupabaseClient() {
   return createClient(url, key);
 }
 
-// GET /api/orders — retrieve all global orders
+// GET /api/orders — retrieve all global orders from Supabase as single source of truth
 export async function GET() {
   try {
     const supabase = getSupabaseClient();
     if (supabase) {
       const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
-      if (!error && data && Array.isArray(data) && data.length > 0) {
+      if (!error && data && Array.isArray(data)) {
         const mappedOrders: OrderData[] = data.map((d: any) => ({
           id: d.id,
           code: d.code,
@@ -40,6 +40,7 @@ export async function GET() {
           briefText: d.brief_text || d.briefText,
           createdAt: d.created_at || d.createdAt || new Date().toISOString(),
         }));
+        globalServerOrders = mappedOrders;
         return NextResponse.json({ orders: mappedOrders, source: "supabase" });
       }
     }
@@ -50,11 +51,11 @@ export async function GET() {
   return NextResponse.json({ orders: globalServerOrders, source: "memory" });
 }
 
-// POST /api/orders — save, update, or clear orders globally
+// POST /api/orders — save, update, delete, or clear orders globally
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { action, order, orders, orderId, partial } = body;
+    const { action, order, orderId, partial } = body;
 
     // Action: CLEAR ALL ORDERS
     if (action === "clear") {
@@ -64,6 +65,20 @@ export async function POST(request: Request) {
         try { await supabase.from("orders").delete().neq("id", "0"); } catch {}
       }
       return NextResponse.json({ success: true, orders: [] });
+    }
+
+    // Action: DELETE SINGLE ORDER
+    if (action === "delete" && orderId) {
+      globalServerOrders = globalServerOrders.filter((o) => o.id !== orderId);
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        try {
+          await supabase.from("orders").delete().eq("id", orderId);
+        } catch (e) {
+          console.warn("Supabase delete notice:", e);
+        }
+      }
+      return NextResponse.json({ success: true, orders: globalServerOrders });
     }
 
     // Action: CREATE NEW ORDER
@@ -112,16 +127,19 @@ export async function POST(request: Request) {
       const supabase = getSupabaseClient();
       if (supabase) {
         try {
-          await supabase.from("orders").update(partial).eq("id", orderId);
+          const dbPartial: any = {};
+          if (partial.status !== undefined) dbPartial.status = partial.status;
+          if (partial.officialCode !== undefined) dbPartial.official_code = partial.officialCode;
+          if (partial.isAccByAdmin !== undefined) dbPartial.is_acc_by_admin = partial.isAccByAdmin;
+          if (partial.rejectionReason !== undefined) dbPartial.rejection_reason = partial.rejectionReason;
+          if (partial.gdriveReviewUrl !== undefined) dbPartial.gdrive_review_url = partial.gdriveReviewUrl;
+          if (partial.gdriveFinalUrl !== undefined) dbPartial.gdrive_final_url = partial.gdriveFinalUrl;
+          if (partial.subStatus !== undefined) dbPartial.sub_status = partial.subStatus;
+
+          await supabase.from("orders").update(dbPartial).eq("id", orderId);
         } catch {}
       }
 
-      return NextResponse.json({ success: true, orders: globalServerOrders });
-    }
-
-    // Action: BULK SYNC ALL
-    if (Array.isArray(orders)) {
-      globalServerOrders = orders;
       return NextResponse.json({ success: true, orders: globalServerOrders });
     }
 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, Eye, Download, Trash2, Inbox } from "lucide-react";
-import { getStoredOrders, saveOrdersToStorage, OrderData, clearAllOrders, syncGlobalOrdersFromServer } from "@/lib/order-store";
+import { getStoredOrders, saveOrdersToStorage, OrderData, clearAllOrders, syncGlobalOrdersFromServer, deleteSingleOrder } from "@/lib/order-store";
 import { DownloadInvoiceButton } from "@/components/admin/download-invoice-button";
 
 export type AdminOrder = OrderData;
@@ -191,6 +191,19 @@ export default function AdminPesananListPage() {
                             <Eye className="w-3 h-3" /> Detail
                           </Link>
                           <DownloadInvoiceButton order={ord} />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`Hapus pesanan ${displayCode} (${ord.customerName})?`)) {
+                                deleteSingleOrder(ord.id);
+                                setOrders(orders.filter((o) => o.id !== ord.id));
+                              }
+                            }}
+                            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Hapus Pesanan Ini"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>

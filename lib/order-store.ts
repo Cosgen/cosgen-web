@@ -31,7 +31,7 @@ export interface OrderData {
 
 export const INITIAL_SHARED_ORDERS: OrderData[] = [];
 
-// Fetch latest global orders from server API
+// Fetch latest global orders from server API (Supabase as source of truth)
 export async function syncGlobalOrdersFromServer(): Promise<OrderData[]> {
   try {
     const res = await fetch("/api/orders", { cache: "no-store" });
@@ -70,15 +70,6 @@ export function saveOrdersToStorage(orders: OrderData[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem("cosgen_admin_orders", JSON.stringify(orders));
   window.dispatchEvent(new Event("cosgen_orders_updated"));
-
-  // Send to global server API for multi-client sync
-  try {
-    fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "sync", orders }),
-    }).catch(() => {});
-  } catch {}
 }
 
 export function saveNewSingleOrder(newOrder: OrderData) {
@@ -109,6 +100,20 @@ export function updateSingleOrder(orderId: string, partial: Partial<OrderData>) 
   } catch {}
 
   return updated.find((o) => o.id === orderId);
+}
+
+export function deleteSingleOrder(orderId: string) {
+  const current = getStoredOrders();
+  const updated = current.filter((o) => o.id !== orderId);
+  saveOrdersToStorage(updated);
+
+  try {
+    fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete", orderId }),
+    }).catch(() => {});
+  } catch {}
 }
 
 export function clearAllOrders() {
