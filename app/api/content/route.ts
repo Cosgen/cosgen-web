@@ -111,8 +111,8 @@ export async function GET() {
           if (parsed && (parsed.hero || parsed.faqs || parsed.portfolio)) {
             globalServerContent = {
               hero: { ...DEFAULT_SITE_CONTENT.hero, ...parsed.hero },
-              faqs: Array.isArray(parsed.faqs) && parsed.faqs.length > 0 ? parsed.faqs : DEFAULT_SITE_CONTENT.faqs,
-              portfolio: Array.isArray(parsed.portfolio) && parsed.portfolio.length > 0 ? parsed.portfolio : DEFAULT_SITE_CONTENT.portfolio,
+              faqs: Array.isArray(parsed.faqs) ? parsed.faqs : DEFAULT_SITE_CONTENT.faqs,
+              portfolio: Array.isArray(parsed.portfolio) ? parsed.portfolio : DEFAULT_SITE_CONTENT.portfolio,
             };
             return NextResponse.json({ content: globalServerContent, source: "supabase_kv" });
           }

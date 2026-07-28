@@ -14,29 +14,27 @@ interface HeroProps {
   onOpenSlotChecker?: () => void;
 }
 
-export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [headline, setHeadline] = useState("Ubah Foto Cosplay & Karya Kreatif Jadi Mahakarya Epik");
-  const [subheadline, setSubheadline] = useState("Layanan editing visual profesional untuk Cosplay, Generasi AI, & Background Premium dengan sistem alur pemesanan transparan.");
-  const [ctaText, setCtaText] = useState("Pesan Jasa Edit Sekarang");
-  const [fontFamily, setFontFamily] = useState("sans");
-
-  useEffect(() => {
-    // 1. Instant cache load (0ms flicker)
+const getInitialHeroConfig = () => {
+  if (typeof window !== "undefined") {
     try {
       const cached = localStorage.getItem("cosgen_site_content");
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (parsed?.hero) {
-          if (parsed.hero.headline) setHeadline(parsed.hero.headline);
-          if (parsed.hero.subheadline) setSubheadline(parsed.hero.subheadline);
-          if (parsed.hero.ctaText) setCtaText(parsed.hero.ctaText);
-          if (parsed.hero.fontFamily) setFontFamily(parsed.hero.fontFamily);
-        }
+        if (parsed?.hero) return parsed.hero;
       }
     } catch (e) {}
+  }
+  return null;
+};
 
-    // 2. Fetch fresh content from cloud
+export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [headline, setHeadline] = useState(() => getInitialHeroConfig()?.headline || "Ubah Foto Cosplay & Karya Kreatif Jadi Mahakarya Epik");
+  const [subheadline, setSubheadline] = useState(() => getInitialHeroConfig()?.subheadline || "Layanan editing visual profesional untuk Cosplay, Generasi AI, & Background Premium dengan sistem alur pemesanan transparan.");
+  const [ctaText, setCtaText] = useState(() => getInitialHeroConfig()?.ctaText || "Pesan Jasa Edit Sekarang");
+  const [fontFamily, setFontFamily] = useState(() => getInitialHeroConfig()?.fontFamily || "sans");
+
+  useEffect(() => {
     const loadContent = () => {
       fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
         .then((r) => r.json())
@@ -210,14 +208,6 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
 
       {/* ── MOBILE HERO CONTENT (centered, CTA-focused, theme-aware) ── */}
       <div className="md:hidden absolute inset-0 z-20 flex flex-col items-center justify-center px-6 text-center space-y-6 pt-16">
-        {/* Badge */}
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-[11px] font-bold rounded-full border border-blue-200 dark:border-blue-700/50">
-          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-          </svg>
-          Edit Foto Cosplay CGI & VFX Cinematic
-        </span>
-
         {/* CTA Headline */}
         <div className="space-y-1">
           <h1 className={`text-3xl sm:text-4xl tracking-tight leading-[1.1] text-slate-900 dark:text-white ${getFontStyle(fontFamily)}`}>

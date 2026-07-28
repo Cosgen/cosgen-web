@@ -57,36 +57,38 @@ const PORTFOLIO_ITEMS: PortfolioItem[] = [
   },
 ];
 
-export function PortfolioSection() {
-  const [items, setItems] = useState<PortfolioItem[]>(PORTFOLIO_ITEMS);
-  const [selectedImage, setSelectedImage] = useState<PortfolioItem | null>(null);
-  const [filter, setFilter] = useState<"Semua" | "Regular" | "Background Premium">("Semua");
-
-  useEffect(() => {
-    // 1. Instant cache load (0ms flicker)
+const getInitialPortfolioState = () => {
+  if (typeof window !== "undefined") {
     try {
       const cached = localStorage.getItem("cosgen_site_content");
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (parsed?.portfolio && Array.isArray(parsed.portfolio) && parsed.portfolio.length > 0) {
-          const mapped: PortfolioItem[] = parsed.portfolio.map((p: any, idx: number) => ({
+        if (parsed?.portfolio && Array.isArray(parsed.portfolio)) {
+          return parsed.portfolio.map((p: any, idx: number) => ({
             id: p.id || `p-${idx}`,
             title: p.title,
             category: p.category === "Background Premium" ? "Background Premium" : "Regular",
             imageUrl: p.image || p.imageUrl || "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&auto=format&fit=crop&q=80",
             aspectRatio: idx % 2 === 0 ? "portrait" : "landscape",
           }));
-          setItems(mapped);
         }
       }
     } catch (e) {}
+  }
+  return PORTFOLIO_ITEMS;
+};
 
-    // 2. Fetch fresh content from cloud
+export function PortfolioSection() {
+  const [items, setItems] = useState<PortfolioItem[]>(() => getInitialPortfolioState());
+  const [selectedImage, setSelectedImage] = useState<PortfolioItem | null>(null);
+  const [filter, setFilter] = useState<"Semua" | "Regular" | "Background Premium">("Semua");
+
+  useEffect(() => {
     const loadContent = () => {
       fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
         .then((r) => r.json())
         .then((d) => {
-          if (d.content && Array.isArray(d.content.portfolio) && d.content.portfolio.length > 0) {
+          if (d.content && Array.isArray(d.content.portfolio)) {
             const mapped: PortfolioItem[] = d.content.portfolio.map((p: any, idx: number) => ({
               id: p.id || `p-${idx}`,
               title: p.title,
@@ -191,16 +193,6 @@ export function PortfolioSection() {
               </button>
             </div>
           ))}
-        </div>
-
-        {/* View all CTA */}
-        <div className="text-center mt-8">
-          <Link
-            href="/portfolio"
-            className="inline-flex items-center gap-1.5 text-[12px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            Lihat Semua Portofolio di Galeri <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
         </div>
       </div>
 
