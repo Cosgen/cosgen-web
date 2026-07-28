@@ -32,77 +32,7 @@ export interface ChatThread {
   }[];
 }
 
-const MOCK_CHAT_THREADS: ChatThread[] = [
-  {
-    id: "thread-1",
-    orderCode: "ORD-2204",
-    customerName: "Budi Santoso",
-    channel: "Live Chat Guest",
-    lastMessage: "Min, tolong warna auranya dibuat lebih terang ya!",
-    timestamp: "16:35 WIB",
-    unreadCount: 1,
-    messages: [
-      {
-        id: "m-1",
-        sender: "Admin",
-        text: "Berikut link review GDrive: drive.google.com/drive/folders/cosgen-review-sample",
-        timestamp: "16:30 WIB",
-      },
-      {
-        id: "m-2",
-        sender: "Customer",
-        text: "Min, tolong warna auranya dibuat lebih terang ya!",
-        timestamp: "16:35 WIB",
-      },
-    ],
-  },
-  {
-    id: "thread-2",
-    orderCode: "REQ-8942",
-    customerName: "Aria Pratama",
-    channel: "Live Chat Guest",
-    lastMessage: "Apakah pesanan saya REQ-8942 sudah disetujui?",
-    timestamp: "15:20 WIB",
-    unreadCount: 0,
-    messages: [
-      {
-        id: "m-3",
-        sender: "Customer",
-        text: "Apakah pesanan saya REQ-8942 sudah disetujui?",
-        timestamp: "15:20 WIB",
-      },
-      {
-        id: "m-4",
-        sender: "Bot",
-        text: "Halo kak Aria! Pesanan REQ-8942 sedang dalam antrian konfirmasi Admin.",
-        timestamp: "15:21 WIB",
-      },
-    ],
-  },
-  {
-    id: "thread-3",
-    orderCode: "ORD-3301",
-    customerName: "@siti_rahma (IG DM)",
-    channel: "Instagram Bot (n8n)",
-    lastMessage: "Berapa biaya paket Pertamax Turbo kak?",
-    timestamp: "12:10 WIB",
-    unreadCount: 0,
-    messages: [
-      {
-        id: "m-5",
-        sender: "Customer",
-        text: "Berapa biaya paket Pertamax Turbo kak?",
-        timestamp: "12:10 WIB",
-      },
-      {
-        id: "m-6",
-        sender: "Bot",
-        text: "Halo! Paket Pertamax Turbo seharga Rp 1.500.000 (Cinematic VFX 3D). Cek selengkapnya di cosgen.id/order",
-        timestamp: "12:10 WIB",
-      },
-    ],
-  },
-];
+const MOCK_CHAT_THREADS: ChatThread[] = [];
 
 export default function AdminLiveChatDashboardPage() {
   const [threads, setThreads] = useState<ChatThread[]>(MOCK_CHAT_THREADS);
