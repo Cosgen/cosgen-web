@@ -17,6 +17,15 @@ export function PricelistSection({ onSelectPackage }: PricelistSectionProps) {
       if (saved) {
         try { setPackages(JSON.parse(saved)); } catch (e) { console.error(e); }
       }
+      fetch("/api/pricelist", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.packages && Array.isArray(d.packages)) {
+            setPackages(d.packages);
+            localStorage.setItem("cosgen_pricelist_packages", JSON.stringify(d.packages));
+          }
+        })
+        .catch(() => {});
     };
     loadPackages();
     window.addEventListener("cosgen_pricelist_updated", loadPackages);

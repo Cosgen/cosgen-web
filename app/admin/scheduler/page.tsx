@@ -37,6 +37,17 @@ export default function AdminSchedulerPage() {
       }
     }
 
+    fetch("/api/scheduler", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.settings) {
+          if (d.settings.totalSlots) setTotalSlots(d.settings.totalSlots);
+          if (Array.isArray(d.settings.holidays)) setHolidays(d.settings.holidays);
+          localStorage.setItem("cosgen_scheduler_data", JSON.stringify(d.settings));
+        }
+      })
+      .catch(() => {});
+
     return () => {
       window.removeEventListener("cosgen_orders_updated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
@@ -55,6 +66,15 @@ export default function AdminSchedulerPage() {
     e.preventDefault();
     const data = { totalSlots, holidays };
     localStorage.setItem("cosgen_scheduler_data", JSON.stringify(data));
+
+    try {
+      fetch("/api/scheduler", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }).catch(() => {});
+    } catch {}
+
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2500);
   };

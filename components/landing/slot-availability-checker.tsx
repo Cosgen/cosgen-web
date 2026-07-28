@@ -37,6 +37,17 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
         console.error(e);
       }
     }
+
+    fetch("/api/scheduler", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.settings) {
+          if (d.settings.totalSlots) setTotalSlots(d.settings.totalSlots);
+          if (Array.isArray(d.settings.holidays)) setHolidays(d.settings.holidays);
+          localStorage.setItem("cosgen_scheduler_data", JSON.stringify(d.settings));
+        }
+      })
+      .catch(() => {});
   }, [isOpen]);
 
   if (!isOpen) return null;
