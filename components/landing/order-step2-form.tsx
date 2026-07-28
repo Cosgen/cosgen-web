@@ -204,7 +204,7 @@ export function OrderStep2Form({
         <div className="flex gap-1.5">
           <input
             type="text"
-            placeholder="Cth: COSGENFIRST"
+            placeholder=""
             value={promoCode}
             onChange={(e) => setPromoCode(e.target.value)}
             className="flex-1 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-[11px] focus:ring-2 focus:ring-blue-600/20 focus:outline-none uppercase font-mono placeholder-slate-400"

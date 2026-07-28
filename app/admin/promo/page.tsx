@@ -281,7 +281,7 @@ export default function AdminPromoCodePage() {
                 <input
                   type="text"
                   required
-                  placeholder="Misal: COSGENNEW20"
+                  placeholder=""
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   className="w-full p-3 rounded-xl border border-slate-200 font-mono uppercase font-bold focus:ring-2 focus:ring-blue-600/20 focus:outline-none"
