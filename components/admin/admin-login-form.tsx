@@ -10,8 +10,8 @@ interface AdminLoginFormProps {
 
 export function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@cosgen.id");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,8 +29,7 @@ export function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
 
     setTimeout(() => {
       setIsLoading(false);
-      // Valid credential demo: admin@cosgen.id / admin123
-      if (email === "admin@cosgen.id" && password === "admin123") {
+      if (email.trim().toLowerCase() === "admin@cosgen.id" && password === "admin123") {
         localStorage.setItem("cosgen_admin_session", "authenticated_session_token");
         if (onSuccess) onSuccess();
         router.push("/admin");
@@ -65,7 +64,7 @@ export function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
           <input
             type="email"
             required
-            placeholder="admin@cosgen.id"
+            placeholder="admin@domain.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:outline-none"
@@ -113,10 +112,6 @@ export function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
           </>
         )}
       </button>
-
-      <p className="text-[11px] text-slate-400 text-center pt-2">
-        Kredensial Demo: <strong>admin@cosgen.id</strong> / <strong>admin123</strong>
-      </p>
     </form>
   );
 }

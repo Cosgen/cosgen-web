@@ -75,15 +75,17 @@ const getInitialPortfolioState = () => {
       }
     } catch (e) {}
   }
-  return PORTFOLIO_ITEMS;
+  return [];
 };
 
 export function PortfolioSection() {
+  const [isMounted, setIsMounted] = useState(false);
   const [items, setItems] = useState<PortfolioItem[]>(() => getInitialPortfolioState());
   const [selectedImage, setSelectedImage] = useState<PortfolioItem | null>(null);
   const [filter, setFilter] = useState<"Semua" | "Regular" | "Background Premium">("Semua");
 
   useEffect(() => {
+    setIsMounted(true);
     const loadContent = () => {
       fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
         .then((r) => r.json())
@@ -154,7 +156,7 @@ export function PortfolioSection() {
         </div>
 
         {/* Masonry Grid */}
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+        <div className={`columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4 transition-opacity duration-150 ${isMounted ? "opacity-100" : "opacity-0"}`}>
           {filtered.map((item) => (
             <div
               key={item.id}

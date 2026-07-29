@@ -28,13 +28,15 @@ const getInitialHeroConfig = () => {
 };
 
 export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) {
+  const [isMounted, setIsMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [headline, setHeadline] = useState(() => getInitialHeroConfig()?.headline || "Ubah Foto Cosplay & Karya Kreatif Jadi Mahakarya Epik");
-  const [subheadline, setSubheadline] = useState(() => getInitialHeroConfig()?.subheadline || "Layanan editing visual profesional untuk Cosplay, Generasi AI, & Background Premium dengan sistem alur pemesanan transparan.");
+  const [headline, setHeadline] = useState(() => getInitialHeroConfig()?.headline || "");
+  const [subheadline, setSubheadline] = useState(() => getInitialHeroConfig()?.subheadline || "");
   const [ctaText, setCtaText] = useState(() => getInitialHeroConfig()?.ctaText || "Pesan Jasa Edit Sekarang");
   const [fontFamily, setFontFamily] = useState(() => getInitialHeroConfig()?.fontFamily || "sans");
 
   useEffect(() => {
+    setIsMounted(true);
     const loadContent = () => {
       fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
         .then((r) => r.json())
@@ -164,11 +166,15 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
       {/* ── DESKTOP HERO CONTENT (right-aligned, dark text on image) ── */}
       <div className="hidden md:flex absolute top-[16%] right-12 flex-col items-end text-right z-30 space-y-3 max-w-2xl">
         <h1
-          className={`text-4xl lg:text-5xl text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)] leading-tight tracking-tight ${getFontStyle(fontFamily)}`}
+          suppressHydrationWarning
+          className={`text-4xl lg:text-5xl text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)] leading-tight tracking-tight transition-opacity duration-150 ${isMounted ? "opacity-100" : "opacity-0"} ${getFontStyle(fontFamily)}`}
         >
           {headline}
         </h1>
-        <p className="text-xs lg:text-sm text-white/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] max-w-lg leading-relaxed">
+        <p
+          suppressHydrationWarning
+          className={`text-xs lg:text-sm text-white/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] max-w-lg leading-relaxed transition-opacity duration-150 ${isMounted ? "opacity-100" : "opacity-0"}`}
+        >
           {subheadline}
         </p>
 
@@ -210,10 +216,16 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
       <div className="md:hidden absolute inset-0 z-20 flex flex-col items-center justify-center px-6 text-center space-y-6 pt-16">
         {/* CTA Headline */}
         <div className="space-y-1">
-          <h1 className={`text-3xl sm:text-4xl tracking-tight leading-[1.1] text-slate-900 dark:text-white ${getFontStyle(fontFamily)}`}>
+          <h1
+            suppressHydrationWarning
+            className={`text-3xl sm:text-4xl tracking-tight leading-[1.1] text-slate-900 dark:text-white transition-opacity duration-150 ${isMounted ? "opacity-100" : "opacity-0"} ${getFontStyle(fontFamily)}`}
+          >
             {headline}
           </h1>
-          <p className="text-[12px] text-slate-600 dark:text-slate-400 max-w-xs mx-auto leading-relaxed mt-2 font-medium">
+          <p
+            suppressHydrationWarning
+            className={`text-[12px] text-slate-600 dark:text-slate-400 max-w-xs mx-auto leading-relaxed mt-2 font-medium transition-opacity duration-150 ${isMounted ? "opacity-100" : "opacity-0"}`}
+          >
             {subheadline}
           </p>
         </div>

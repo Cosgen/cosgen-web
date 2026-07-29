@@ -14,13 +14,23 @@ import {
 } from "lucide-react";
 import { SiteContentData, DEFAULT_SITE_CONTENT, PortfolioItem, FaqItem, HeroContent } from "@/app/api/content/route";
 
+const getAdminCachedContent = () => {
+  if (typeof window !== "undefined") {
+    try {
+      const cached = localStorage.getItem("cosgen_site_content");
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return null;
+};
+
 export default function AdminContentManagementPage() {
   const [activeTab, setActiveTab] = useState<"galeri" | "faq" | "hero">("hero");
 
   // Site Content State
-  const [hero, setHero] = useState<HeroContent>(DEFAULT_SITE_CONTENT.hero);
-  const [faqs, setFaqs] = useState<FaqItem[]>(DEFAULT_SITE_CONTENT.faqs);
-  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>(DEFAULT_SITE_CONTENT.portfolio);
+  const [hero, setHero] = useState<HeroContent>(() => getAdminCachedContent()?.hero || { headline: "", subheadline: "", ctaText: "" });
+  const [faqs, setFaqs] = useState<FaqItem[]>(() => getAdminCachedContent()?.faqs || []);
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>(() => getAdminCachedContent()?.portfolio || []);
   const [savedNotice, setSavedNotice] = useState(false);
 
   // Form states for adding items
@@ -40,6 +50,9 @@ export default function AdminContentManagementPage() {
           if (d.content.hero) setHero(d.content.hero);
           if (Array.isArray(d.content.faqs)) setFaqs(d.content.faqs);
           if (Array.isArray(d.content.portfolio)) setPortfolioItems(d.content.portfolio);
+          try {
+            localStorage.setItem("cosgen_site_content", JSON.stringify(d.content));
+          } catch (e) {}
         }
       })
       .catch(() => {});
@@ -47,6 +60,9 @@ export default function AdminContentManagementPage() {
 
   const saveContentToCloud = async (updatedContent: SiteContentData) => {
     try {
+      try {
+        localStorage.setItem("cosgen_site_content", JSON.stringify(updatedContent));
+      } catch (e) {}
       await fetch("/api/content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
