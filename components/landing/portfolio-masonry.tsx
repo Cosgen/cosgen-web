@@ -11,18 +11,18 @@ export interface PortfolioItem {
   aspectRatio?: "portrait" | "landscape";
 }
 
-// 10 Official CosGen Cloudinary Portfolio Images
+// 10 Official CosGen Cloudinary Portfolio Images with "Cosplay 01" ... "Cosplay 10"
 export const OFFICIAL_10_PORTFOLIO: PortfolioItem[] = [
-  { id: "p1",  title: "Cosplay VFX Sinematik",          category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785183996/Pic_2_sbrbuc.jpg" },
-  { id: "p2",  title: "Background Premium — Cinematic", category: "Background Premium", imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785188133/Pic_1_Aemeath_a6tnw8.jpg" },
-  { id: "p3",  title: "Full CGI Edit",                  category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414586/Final_oa3n4x.jpg" },
-  { id: "p4",  title: "Clean Visual Edit",              category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414651/Final_Clean_m20ri7.jpg" },
-  { id: "p5",  title: "Portrait Retouch",               category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414847/david_szbhpi.png" },
-  { id: "p6",  title: "VFX Compositing",                category: "Background Premium", imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414987/Edit_wfui7l.png" },
-  { id: "p7",  title: "Cosplay CGI Final",              category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415103/Final_rqbqbj.jpg" },
-  { id: "p8",  title: "Scene Render Final",             category: "Background Premium", imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415206/Final_nsc3k5.jpg" },
-  { id: "p9",  title: "Before-After Compare",           category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415274/Final_2_Compare_csw7vk.jpg" },
-  { id: "p10", title: "Final Edit Master",             category: "Background Premium", imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415340/Final_01_e3s5sw.jpg" },
+  { id: "p1",  title: "Cosplay 01", category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785183996/Pic_2_sbrbuc.jpg" },
+  { id: "p2",  title: "Cosplay 02", category: "Background Premium", imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785188133/Pic_1_Aemeath_a6tnw8.jpg" },
+  { id: "p3",  title: "Cosplay 03", category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414586/Final_oa3n4x.jpg" },
+  { id: "p4",  title: "Cosplay 04", category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414651/Final_Clean_m20ri7.jpg" },
+  { id: "p5",  title: "Cosplay 05", category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414847/david_szbhpi.png" },
+  { id: "p6",  title: "Cosplay 06", category: "Background Premium", imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414987/Edit_wfui7l.png" },
+  { id: "p7",  title: "Cosplay 07", category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415103/Final_rqbqbj.jpg" },
+  { id: "p8",  title: "Cosplay 08", category: "Background Premium", imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415206/Final_nsc3k5.jpg" },
+  { id: "p9",  title: "Cosplay 09", category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415274/Final_2_Compare_csw7vk.jpg" },
+  { id: "p10", title: "Cosplay 10", category: "Background Premium", imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415340/Final_01_e3s5sw.jpg" },
 ];
 
 const ITEMS_PER_PAGE = 6;
@@ -36,16 +36,28 @@ export function PortfolioSection() {
 
   useEffect(() => {
     setMounted(true);
+    // Clear legacy local storage to prevent blinking of old items
+    try {
+      const c = JSON.parse(localStorage.getItem("cosgen_site_content") || "null");
+      if (c?.portfolio) {
+        delete c.portfolio;
+        localStorage.setItem("cosgen_site_content", JSON.stringify(c));
+      }
+    } catch {}
+
     const load = () => {
       fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
         .then(r => r.json()).then(d => {
           if (d.content?.portfolio?.length) {
-            const mapped = d.content.portfolio.map((p: any, i: number) => ({
-              id: p.id || `p-${i}`, title: p.title,
-              category: p.category === "Background Premium" ? "Background Premium" : "Regular",
-              imageUrl: p.image || p.imageUrl || "",
-            }));
-            setItems(mapped);
+            const valid = d.content.portfolio
+              .filter((p: any) => p.image && p.image.includes("cloudinary.com"))
+              .map((p: any, i: number) => ({
+                id: p.id || `p-${i}`,
+                title: p.title || `Cosplay ${String(i + 1).padStart(2, "0")}`,
+                category: p.category === "Background Premium" ? "Background Premium" : "Regular",
+                imageUrl: p.image || p.imageUrl || "",
+              }));
+            if (valid.length) setItems(valid);
           }
         }).catch(() => {});
     };
@@ -72,11 +84,11 @@ export function PortfolioSection() {
 
   // Bento spans for 6-card grid
   const bentoSpans = [
-    "col-span-2 row-span-2", // 0: Big highlight (top left)
+    "col-span-2 row-span-2", // 0: Big highlight
     "col-span-1 row-span-1", // 1: Standard
-    "col-span-1 row-span-2", // 2: Tall (right)
+    "col-span-1 row-span-2", // 2: Tall
     "col-span-1 row-span-1", // 3: Standard
-    "col-span-2 row-span-1", // 4: Wide (bottom)
+    "col-span-2 row-span-1", // 4: Wide
     "col-span-1 row-span-1", // 5: Standard
   ];
 

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-const BEFORE_IMG = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785183996/Pic_2_sbrbuc.jpg";
+const BEFORE_IMG = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785416895/before_kcaobw.jpg";
 const AFTER_IMG  = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785183997/Pic_1_r4qbhs.jpg";
 
 export function BeforeAfterSliderSection() {
