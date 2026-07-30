@@ -16,6 +16,7 @@ import {
   FileText,
 } from "lucide-react";
 import { getStoredOrders, updateSingleOrder, deleteSingleOrder, syncGlobalOrdersFromServer, OrderData } from "@/lib/order-store";
+import { INITIAL_PACKAGES, ServicePackage } from "@/app/admin/item-jasa/page";
 import { RejectionReasonModal } from "@/components/admin/rejection-reason-modal";
 import { ConfirmAccButton } from "@/components/admin/confirm-acc-button";
 import { EditPhotoCountForm } from "@/components/admin/edit-photo-count-form";
@@ -38,6 +39,7 @@ export default function AdminOrderDetailPage() {
   const [customerGdriveInput, setCustomerGdriveInput] = useState("");
   const [gdriveReviewInput, setGdriveReviewInput] = useState("");
   const [gdriveFinalInput, setGdriveFinalInput] = useState("");
+  const [totalAmountInput, setTotalAmountInput] = useState<number>(0);
 
   useEffect(() => {
     const loadOrder = () => {
@@ -56,6 +58,7 @@ export default function AdminOrderDetailPage() {
         setCustomerGdriveInput(found.customerGdriveUrl || "");
         setGdriveReviewInput(found.gdriveReviewUrl || "");
         setGdriveFinalInput(found.gdriveFinalUrl || "");
+        setTotalAmountInput(found.totalAmount || 0);
       }
     };
 
@@ -323,14 +326,49 @@ export default function AdminOrderDetailPage() {
           </div>
         </div>
 
-        {/* Edit Photo Count */}
-        <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
+        {/* Edit Photo Count & Price Adjustment */}
+        <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-3">
           <EditPhotoCountForm
             currentPhotoCount={order.photoCount}
             onSave={(newCount) => {
-              saveChanges({ photoCount: newCount });
+              const saved = localStorage.getItem("cosgen_pricelist_packages");
+              let packages: ServicePackage[] = INITIAL_PACKAGES;
+              if (saved) { try { packages = JSON.parse(saved); } catch {} }
+              const pkgData = packages.find((p) => p.name === order.package);
+              const basePrice = pkgData ? pkgData.price : 650000;
+              const discountPct = pkgData ? (pkgData.discountPercent || 0) : 0;
+              const unitPrice = Math.max(0, basePrice - Math.round(basePrice * (discountPct / 100)));
+              const newTotal = unitPrice * Math.max(1, newCount);
+
+              setTotalAmountInput(newTotal);
+              saveChanges({ photoCount: newCount, totalAmount: newTotal });
             }}
           />
+
+          <div className="pt-2.5 border-t border-slate-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Nominal Tagihan</span>
+              <span className="text-base font-black font-mono text-emerald-600">
+                Rp {order.totalAmount.toLocaleString("id-ID")}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-semibold text-slate-600">Ubah Nominal (Rp):</label>
+              <input
+                type="number"
+                value={totalAmountInput}
+                onChange={(e) => setTotalAmountInput(Number(e.target.value))}
+                className="w-32 p-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-600/20 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => saveChanges({ totalAmount: totalAmountInput })}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1 cursor-pointer"
+              >
+                <Save className="w-3.5 h-3.5" /> Simpan Nominal
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* GDrive Links Editor */}
