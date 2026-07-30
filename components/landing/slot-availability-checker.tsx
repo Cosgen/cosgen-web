@@ -10,7 +10,7 @@ interface SlotAvailabilityCheckerProps {
 }
 
 export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: SlotAvailabilityCheckerProps) {
-  const [totalSlots, setTotalSlots] = useState(25);
+  const [totalSlots, setTotalSlots] = useState(5);
   const [usedSlots, setUsedSlots]   = useState(0);
   const [holidays, setHolidays]     = useState<number[]>([]);
 
@@ -169,12 +169,20 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
 
           {/* Calendar Section */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
               <p className="text-[10px] font-black text-slate-700 dark:text-slate-300">
                 Jadwal Studio ({calendarData.currentMonthLabel})
               </p>
-              <div className="flex items-center gap-1.5 text-[9px] text-slate-500">
-                <span className="w-2 h-2 rounded-full bg-red-400 inline-block" /> Libur
+              <div className="flex items-center gap-2 text-[8.5px] font-semibold text-slate-500 flex-wrap">
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-sm bg-emerald-600 inline-block" /> Hari Ini
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-sm bg-red-400 inline-block" /> Libur
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-sm bg-gradient-to-br from-emerald-500 via-emerald-500 50% to-red-500 50% inline-block" /> Today Libur
+                </span>
               </div>
             </div>
 
@@ -196,18 +204,31 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
               {calendarData.days.map((day) => {
                 const isHoliday = holidays.includes(day);
                 const isToday = day === calendarData.todayDate;
+
+                let boxClass = "";
+                let boxStyle: React.CSSProperties = {};
+
+                if (isToday && isHoliday) {
+                  boxStyle = {
+                    background: "linear-gradient(135deg, #10b981 50%, #ef4444 50%)",
+                    color: "#ffffff",
+                  };
+                  boxClass = "text-white font-extrabold shadow-md ring-2 ring-emerald-400 border-0";
+                } else if (isToday) {
+                  boxClass = "bg-emerald-600 text-white font-extrabold shadow-md ring-2 ring-emerald-400 border-emerald-500";
+                } else if (isHoliday) {
+                  boxClass = "bg-red-500 text-white font-bold border-red-600 shadow-xs";
+                } else {
+                  boxClass = "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700";
+                }
+
                 return (
                   <div
                     key={day}
-                    className={`aspect-square rounded-lg text-[9px] font-bold flex items-center justify-center transition-all ${
-                      isHoliday
-                        ? "bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-900"
-                        : isToday
-                        ? "bg-blue-600 text-white shadow-md font-extrabold"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
-                    }`}
+                    style={boxStyle}
+                    className={`aspect-square rounded-lg text-[9px] font-bold flex flex-col items-center justify-center transition-all ${boxClass}`}
                   >
-                    {day}
+                    <span>{day}</span>
                   </div>
                 );
               })}
