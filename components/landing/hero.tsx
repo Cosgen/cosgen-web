@@ -8,7 +8,6 @@ const HERO_BG    = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785188133
 const WHITE_LOGO = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785184391/Logo_Putih_01_xozs8n.png";
 const COLOR_LOGO = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785184392/Logo_Warna_01_y5dpcm.png";
 
-// Exact permanent hero text strings — no network fetch blinking
 const HERO_HEADLINE    = "Platform Interaktif";
 const HERO_SUBHEADLINE = "CosplayGenerative";
 const HERO_DESCRIPTION = "Transformasi foto cosplay dengan background premium serta sistem pemesanan yang jelas untuk memastikan setiap proses dapat dipantau dengan mudah.";
@@ -23,7 +22,6 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
 
   useEffect(() => {
     setMounted(true);
-    // Clear legacy localStorage cache
     try {
       localStorage.removeItem("cosgen_site_content");
     } catch {}
@@ -156,13 +154,13 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           padding: "60px clamp(16px,4vw,48px) 80px",
         }}
       >
-        {/* 1. Judul — Platform Interaktif (Tebal / Bold / Warna Hitam - --text-1) */}
+        {/* 1. Judul — Platform Interaktif (Besar, Bold, Hitam - --text-1) */}
         <h1
           suppressHydrationWarning
-          className="headline leading-[1.08] mb-2"
+          className="headline leading-[1.05] mb-2"
           style={{
-            fontSize: "clamp(34px, 5.2vw, 70px)",
-            maxWidth: "780px",
+            fontSize: "clamp(38px, 5.8vw, 78px)",
+            maxWidth: "820px",
             color: "var(--text-1)",
             fontFamily: "'Space Grotesk', sans-serif",
             fontWeight: 800,
@@ -174,12 +172,12 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           {HERO_HEADLINE}
         </h1>
 
-        {/* 2. Sub Judul — CosplayGenerative (Sedang / Tidak Bold / Warna Hitam - --text-1) */}
+        {/* 2. Sub Judul — CosplayGenerative (Sedang, Lebih Besar, Tidak Bold, Hitam - --text-1) */}
         <h2
           suppressHydrationWarning
           className="mb-5"
           style={{
-            fontSize: "clamp(20px, 2.8vw, 30px)",
+            fontSize: "clamp(22px, 3.2vw, 34px)",
             color: "var(--text-1)",
             fontFamily: "'Inter', sans-serif",
             fontWeight: 500,
@@ -192,15 +190,17 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           {HERO_SUBHEADLINE}
         </h2>
 
-        {/* 3. Deskripsi — Transformasi foto cosplay... (Tipis / Tidak Bold / Warna Abu-Abu Pudar - --text-3) */}
+        {/* 3. Deskripsi — Transformasi foto... (Ringkas, Jelas/Legible, Letter-spacing lega) */}
         <p
           suppressHydrationWarning
-          className="text-[15px] leading-relaxed max-w-xl mb-8"
+          className="leading-relaxed max-w-xl mb-8"
           style={{
-            color: "var(--text-3)",
+            fontSize: "13.5px",
+            color: "var(--text-2)",
             fontFamily: "'Inter', sans-serif",
             fontWeight: 300,
             fontStyle: "normal",
+            letterSpacing: "0.025em",
             opacity: mounted ? 1 : 0,
             transition: "opacity 0.2s ease",
             animation: "slide-up 0.5s cubic-bezier(.22,1,.36,1) 0.15s both",
@@ -254,12 +254,12 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           paddingRight: "20px",
         }}
       >
-        {/* 1. Judul — Platform Interaktif (Tebal / Bold / Warna Hitam - --text-1) */}
+        {/* 1. Judul — Platform Interaktif (Makin Besar & Bold) */}
         <h1
           suppressHydrationWarning
           className="headline leading-tight mb-1"
           style={{
-            fontSize: "26px",
+            fontSize: "32px",
             color: "var(--text-1)",
             fontFamily: "'Space Grotesk', sans-serif",
             fontWeight: 800,
@@ -270,12 +270,12 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           {HERO_HEADLINE}
         </h1>
 
-        {/* 2. Sub Judul — CosplayGenerative (Sedang / Tidak Bold / Warna Hitam - --text-1) */}
+        {/* 2. Sub Judul — CosplayGenerative (Makin Besar, Sedang, Hitam) */}
         <h2
           suppressHydrationWarning
           className="mb-3"
           style={{
-            fontSize: "18px",
+            fontSize: "20px",
             color: "var(--text-1)",
             fontFamily: "'Inter', sans-serif",
             fontWeight: 500,
@@ -287,15 +287,17 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           {HERO_SUBHEADLINE}
         </h2>
 
-        {/* 3. Deskripsi — Transformasi foto cosplay... (Tipis / Tidak Bold / Warna Abu-Abu Pudar - --text-3) */}
+        {/* 3. Deskripsi — Transformasi foto... (Lebih kecil, Jelas, Letter-spacing lega) */}
         <p
           suppressHydrationWarning
-          className="text-[13px] leading-relaxed mb-6"
+          className="leading-relaxed mb-6"
           style={{
-            color: "var(--text-3)",
+            fontSize: "12px",
+            color: "var(--text-2)",
             fontFamily: "'Inter', sans-serif",
             fontWeight: 300,
             fontStyle: "normal",
+            letterSpacing: "0.025em",
             maxWidth: "320px",
             opacity: mounted ? 1 : 0,
             transition: "opacity 0.2s ease",

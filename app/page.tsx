@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { HeroSection } from "@/components/landing/hero";
 import { PortfolioSection } from "@/components/landing/portfolio-masonry";
 import { BeforeAfterSliderSection } from "@/components/landing/before-after-slider";
@@ -15,6 +15,18 @@ export default function RootPage() {
   const [orderOpen, setOrderOpen]   = useState(false);
   const [slotOpen, setSlotOpen]     = useState(false);
   const [selectedPkg, setSelectedPkg] = useState("Pertamax");
+
+  // Force scroll to top on refresh (prevents mobile browser restoring scroll to #compare)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (!window.location.hash) {
+        if ("scrollRestoration" in window.history) {
+          window.history.scrollRestoration = "manual";
+        }
+        window.scrollTo(0, 0);
+      }
+    }
+  }, []);
 
   const openOrder = (pkgName?: string) => {
     if (pkgName) setSelectedPkg(pkgName);
