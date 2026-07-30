@@ -86,12 +86,17 @@ export function mergeOrders(primary: OrderData[], secondary: OrderData[]): Order
       const pW = STATUS_WEIGHT[p.status] || 0;
       const sW = STATUS_WEIGHT[s.status] || 0;
 
-      let merged: OrderData;
-      if (sW > pW || (s.reviewStartedAt && !p.reviewStartedAt)) {
-        merged = { ...p, ...s };
-      } else {
-        merged = { ...s, ...p };
-      }
+      const base = sW >= pW ? { ...p, ...s } : { ...s, ...p };
+
+      const merged: OrderData = {
+        ...base,
+        reviewStartedAt: s.reviewStartedAt || p.reviewStartedAt || base.reviewStartedAt,
+        gdriveReviewUrl: s.gdriveReviewUrl || p.gdriveReviewUrl || base.gdriveReviewUrl,
+        gdriveFinalUrl: s.gdriveFinalUrl || p.gdriveFinalUrl || base.gdriveFinalUrl,
+        officialCode: s.officialCode || p.officialCode || base.officialCode,
+        isAccByAdmin: s.isAccByAdmin || p.isAccByAdmin || base.isAccByAdmin,
+      };
+
       map.set(mainKey, merged);
     }
   });
