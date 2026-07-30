@@ -126,20 +126,69 @@ export async function saveNewSingleOrder(newOrder: OrderData): Promise<OrderData
 
 export async function updateSingleOrder(orderId: string, partial: Partial<OrderData>) {
   const current = getStoredOrders();
-  const updated = current.map((o) => (o.id === orderId ? { ...o, ...partial } : o));
+  const existing = current.find(
+    (o) =>
+      o.id === orderId ||
+      o.code === orderId ||
+      (o.officialCode && o.officialCode === orderId) ||
+      (o.tempCode && o.tempCode === orderId)
+  );
+
+  const isReviewStatus =
+    partial.status === "Review" ||
+    partial.status === "Review Hasil" ||
+    partial.status === "Review Pelanggan";
+
+  if (isReviewStatus) {
+    if (!partial.reviewStartedAt && (!existing || !existing.reviewStartedAt)) {
+      partial.reviewStartedAt = new Date().toISOString();
+    }
+  }
+
+  const updated = current.map((o) => {
+    if (
+      o.id === orderId ||
+      o.code === orderId ||
+      (o.officialCode && o.officialCode === orderId) ||
+      (o.tempCode && o.tempCode === orderId)
+    ) {
+      return { ...o, ...partial };
+    }
+    return o;
+  });
+
   saveOrdersToStorage(updated);
 
   try {
-    await fetch("/api/orders", {
+    const res = await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "update", orderId, partial }),
     });
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json.orders && Array.isArray(json.orders)) {
+        const merged = mergeOrders(json.orders, updated);
+        saveOrdersToStorage(merged);
+        return merged.find(
+          (o) =>
+            o.id === orderId ||
+            o.code === orderId ||
+            (o.officialCode && o.officialCode === orderId)
+        );
+      }
+    }
   } catch (err) {
     console.error("Failed to update order on server API:", err);
   }
 
-  return updated.find((o) => o.id === orderId);
+  return updated.find(
+    (o) =>
+      o.id === orderId ||
+      o.code === orderId ||
+      (o.officialCode && o.officialCode === orderId)
+  );
 }
 
 export async function deleteSingleOrder(orderId: string) {

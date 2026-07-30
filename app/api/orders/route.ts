@@ -123,7 +123,13 @@ export async function POST(request: Request) {
 
     // Action: UPDATE ORDER
     if (action === "update" && orderId && partial) {
-      const idx = globalServerOrders.findIndex((o) => o.id === orderId);
+      const idx = globalServerOrders.findIndex(
+        (o) =>
+          o.id === orderId ||
+          o.code === orderId ||
+          (o.officialCode && o.officialCode === orderId) ||
+          (o.tempCode && o.tempCode === orderId)
+      );
       if (idx >= 0) {
         globalServerOrders[idx] = { ...globalServerOrders[idx], ...partial };
       }
@@ -147,9 +153,14 @@ export async function POST(request: Request) {
           if (partial.briefText !== undefined) dbPartial.brief_text = partial.briefText;
           if (partial.reviewStartedAt !== undefined) dbPartial.review_started_at = partial.reviewStartedAt;
 
-          const res = await supabase.from("orders").update(dbPartial).eq("id", orderId);
-          if (res.error) console.error("Supabase update error:", res.error);
-        } catch {}
+          const { error: updateErr } = await supabase
+            .from("orders")
+            .update(dbPartial)
+            .or(`id.eq.${orderId},code.eq.${orderId},official_code.eq.${orderId},temp_code.eq.${orderId}`);
+          if (updateErr) console.error("Supabase update error:", updateErr);
+        } catch (e) {
+          console.warn("Supabase update exception:", e);
+        }
       }
 
       return NextResponse.json({ success: true, orders: globalServerOrders });
