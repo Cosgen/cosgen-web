@@ -12,69 +12,56 @@ import { SlotAvailabilityChecker } from "@/components/landing/slot-availability-
 import { MobileBottomNav } from "@/components/landing/mobile-bottom-nav";
 
 export default function RootPage() {
-  const [orderModalOpen, setOrderModalOpen] = useState(false);
-  const [slotCheckerOpen, setSlotCheckerOpen] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState("Pertamax");
+  const [orderOpen, setOrderOpen]   = useState(false);
+  const [slotOpen, setSlotOpen]     = useState(false);
+  const [selectedPkg, setSelectedPkg] = useState("Pertamax");
 
-  const handleOpenOrder = (pkgName?: string) => {
-    if (pkgName) setSelectedPackage(pkgName);
-    setOrderModalOpen(true);
+  const openOrder = (pkgName?: string) => {
+    if (pkgName) setSelectedPkg(pkgName);
+    setOrderOpen(true);
   };
 
-  const scrollToSection = (hash: string) => {
+  const scrollTo = (hash: string) => {
     const el = document.querySelector(hash);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-      history.replaceState(null, "", hash);
-    }
+    if (el) { el.scrollIntoView({ behavior: "smooth" }); history.replaceState(null, "", hash); }
   };
+
+  // Hide mobile nav when any modal/form is open
+  const navHidden = orderOpen || slotOpen;
 
   return (
-    <div className="min-h-screen selection:bg-blue-500 selection:text-white">
-      {/* Hero — has its own top navbar (mobile) + desktop floating nav */}
+    <div className="min-h-screen">
       <HeroSection
-        onOpenOrderModal={() => handleOpenOrder()}
-        onOpenSlotChecker={() => setSlotCheckerOpen(true)}
+        onOpenOrderModal={() => openOrder()}
+        onOpenSlotChecker={() => setSlotOpen(true)}
       />
 
-      {/* Portfolio */}
       <PortfolioSection />
-
-      {/* Before & After */}
       <BeforeAfterSliderSection />
-
-      {/* Pricelist */}
-      <PricelistSection onSelectPackage={(pkg) => handleOpenOrder(pkg)} />
-
-      {/* FAQ */}
+      <PricelistSection onSelectPackage={(pkg) => openOrder(pkg)} />
       <FAQSection />
-
-      {/* Footer */}
       <LandingFooter />
 
       {/* Modals */}
       <OrderModal
-        isOpen={orderModalOpen}
-        onClose={() => setOrderModalOpen(false)}
-        initialPackage={selectedPackage}
+        isOpen={orderOpen}
+        onClose={() => setOrderOpen(false)}
+        initialPackage={selectedPkg}
       />
-
       <SlotAvailabilityChecker
-        isOpen={slotCheckerOpen}
-        onClose={() => setSlotCheckerOpen(false)}
-        onProceedOrder={() => {
-          setSlotCheckerOpen(false);
-          setOrderModalOpen(true);
-        }}
+        isOpen={slotOpen}
+        onClose={() => setSlotOpen(false)}
+        onProceedOrder={() => { setSlotOpen(false); setOrderOpen(true); }}
       />
 
-      {/* Mobile Bottom Nav (mobile only ≤768px) */}
+      {/* Mobile Bottom Nav — always visible, hidden during form fill */}
       <MobileBottomNav
-        onOrderClick={() => handleOpenOrder()}
-        onSlotClick={() => setSlotCheckerOpen(true)}
+        hidden={navHidden}
+        onOrderClick={() => openOrder()}
+        onSlotClick={() => setSlotOpen(true)}
         onStatusClick={() => { window.location.href = "/cek-status"; }}
-        onPortfolioClick={() => scrollToSection("#portfolio")}
-        onPriceClick={() => scrollToSection("#pricelist")}
+        onPortfolioClick={() => scrollTo("#portfolio")}
+        onPriceClick={() => scrollTo("#pricelist")}
       />
     </div>
   );

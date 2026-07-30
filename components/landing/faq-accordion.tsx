@@ -2,50 +2,31 @@
 
 import React, { useState, useEffect } from "react";
 
-interface FAQItem {
-  id: string;
-  question: string;
-  answer: string;
-  category: string;
-}
+interface FAQItem { id: string; question: string; answer: string; }
 
-const FAQ_DEFAULT: FAQItem[] = [
-  { id: "faq-1", category: "Waktu", question: "Berapa lama estimasi pengerjaan foto?", answer: "Estimasi pengerjaan standar adalah ±3 hari kerja efektif setelah pesanan disetujui (ACC) dan masuk antrian resmi (ORD-XXXX)." },
-  { id: "faq-2", category: "Kualitas", question: "Format dan resolusi foto seperti apa yang disarankan?", answer: "Disarankan mengunggah file beresolusi tinggi (minimal 2000px atau format DSLR/Mirrorless/RAW). Semakin jelas foto mentah Anda, semakin detail hasil CGI yang dihasilkan." },
-  { id: "faq-3", category: "Pembayaran", question: "Mengapa tombol 'Bayar Sekarang' di portal terkunci?", answer: "Tombol pembayaran sengaja terkunci selama status 'Review' untuk memastikan Anda telah memeriksa hasil di GDrive dan menyetujuinya. Setelah Admin menekan 'Konfirmasi ACC', tombol pembayaran langsung terbuka." },
-  { id: "faq-4", category: "Privasi", question: "Berapa lama foto referensi disimpan di server?", answer: "Seluruh foto referensi yang diunggah pelanggan dihapus secara otomatis dan permanen 2x24 jam (48 jam) setelah status pesanan berubah menjadi 'Selesai'." },
+const DEFAULTS: FAQItem[] = [
+  { id: "1", question: "Berapa lama estimasi pengerjaan?", answer: "Estimasi ±3 hari kerja efektif setelah pesanan ACC dan masuk antrian resmi. Tidak dijamin karena mengikuti antrian." },
+  { id: "2", question: "Format dan resolusi foto yang disarankan?", answer: "Minimal 2000px, format DSLR/Mirrorless/RAW. Semakin jernih foto asli, semakin detail hasil CGI-nya." },
+  { id: "3", question: "Kenapa tombol 'Bayar' terkunci?", answer: "Tombol pembayaran terbuka setelah kamu melihat preview di GDrive dan Admin menekan 'Konfirmasi ACC'." },
+  { id: "4", question: "Berapa lama foto disimpan di server?", answer: "Foto referensi dihapus otomatis 48 jam setelah status pesanan berubah jadi 'Selesai'." },
+  { id: "5", question: "Bagaimana jika hasil tidak sesuai ekspektasi?", answer: "Kami menyediakan revisi sesuai paket yang dipilih. Pastikan brief awal sudah jelas untuk hasil optimal." },
 ];
 
 export function FAQSection() {
-  const [faqs, setFaqs] = useState<FAQItem[]>(FAQ_DEFAULT);
-  const [openId, setOpenId] = useState<string | null>("faq-1");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [faqs, setFaqs] = useState<FAQItem[]>(DEFAULTS);
+  const [openId, setOpenId] = useState<string | null>("1");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    // Load cache instantly
     try {
-      const cached = localStorage.getItem("cosgen_site_content");
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed?.faqs?.length) {
-          setFaqs(parsed.faqs.map((item: any, idx: number) => ({
-            id: item.id || `faq-${idx}`, category: item.category || "",
-            question: item.question, answer: item.answer,
-          })));
-        }
-      }
+      const c = JSON.parse(localStorage.getItem("cosgen_site_content") || "null");
+      if (c?.faqs?.length) setFaqs(c.faqs.map((f: any, i: number) => ({ id: f.id || `f${i}`, question: f.question, answer: f.answer })));
     } catch {}
-
-    // Fetch fresh
     const load = () => {
       fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
-        .then(r => r.json())
-        .then(d => {
+        .then(r => r.json()).then(d => {
           if (d.content?.faqs?.length) {
-            setFaqs(d.content.faqs.map((item: any, idx: number) => ({
-              id: item.id || `faq-${idx}`, category: item.category || "",
-              question: item.question, answer: item.answer,
-            })));
+            setFaqs(d.content.faqs.map((f: any, i: number) => ({ id: f.id || `f${i}`, question: f.question, answer: f.answer })));
             try { localStorage.setItem("cosgen_site_content", JSON.stringify(d.content)); } catch {}
           }
         }).catch(() => {});
@@ -57,78 +38,85 @@ export function FAQSection() {
   }, []);
 
   const filtered = faqs.filter(f =>
-    f.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    f.answer.toLowerCase().includes(searchQuery.toLowerCase())
+    f.question.toLowerCase().includes(search.toLowerCase()) || f.answer.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <section id="faq" className="py-16 sm:py-24" style={{ background: "var(--tf-surface)" }}>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+    <section id="faq" className="section" style={{ background: "var(--bg-1)" }}>
+      <div className="container">
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 mb-10">
-          <div>
-            <div className="tf-section-label mb-4 inline-flex">
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        {/* ── Header ──────────────────────────────────────────── */}
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-10">
+          <div className="md:w-1/2">
+            <div className="section-tag mb-3">
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
               </svg>
               FAQ
             </div>
-            <h2 className="font-headline font-black tracking-tight" style={{ fontSize: "clamp(28px,4vw,48px)", color: "var(--tf-text-primary)" }}>
-              Ada Pertanyaan?
+            <h2 className="headline" style={{ fontSize: "clamp(24px,3.5vw,44px)", color: "var(--text-1)" }}>
+              Pertanyaan<br />yang Sering Ditanya
             </h2>
           </div>
-          {/* Search */}
-          <div className="relative w-full sm:w-60">
-            <svg className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--tf-text-tertiary)" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input
-              type="text"
-              placeholder="Cari pertanyaan..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="tf-input pl-10"
-              style={{ fontSize: "13px", minHeight: "42px" }}
-            />
+
+          <div className="md:w-[320px]">
+            {/* Search */}
+            <div className="relative mb-3">
+              <svg className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--text-3)" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                type="text"
+                placeholder="Cari pertanyaan..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="input pl-10"
+                style={{ fontSize: "13px", minHeight: "40px" }}
+              />
+            </div>
+            <p className="text-[12px]" style={{ color: "var(--text-3)", fontFamily: "'Inter',sans-serif" }}>
+              {filtered.length} pertanyaan tersedia
+            </p>
           </div>
         </div>
 
-        {/* Accordion */}
-        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--tf-border)" }}>
+        {/* ── Accordion ───────────────────────────────────────── */}
+        <div
+          className="divide-y"
+          style={{ borderRadius: "var(--r-xl)", border: "1px solid var(--border)", overflow: "hidden" }}
+        >
           {filtered.length === 0 ? (
-            <p className="text-center py-12 text-[14px]" style={{ color: "var(--tf-text-tertiary)" }}>
-              Tidak ada hasil untuk &ldquo;{searchQuery}&rdquo;
+            <p className="py-12 text-center text-[13px]" style={{ color: "var(--text-3)" }}>
+              Tidak ditemukan untuk &ldquo;{search}&rdquo;
             </p>
           ) : filtered.map((faq, idx) => {
             const isOpen = openId === faq.id;
             return (
-              <div key={faq.id} style={{ borderTop: idx > 0 ? `1px solid var(--tf-border)` : undefined }}>
+              <div key={faq.id} style={{ borderTop: idx > 0 ? "1px solid var(--border)" : undefined }}>
                 <button
                   type="button"
                   onClick={() => setOpenId(isOpen ? null : faq.id)}
-                  className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left transition-colors"
+                  className="w-full flex items-center justify-between gap-4 text-left px-5 py-4"
                   style={{
-                    background: isOpen ? "rgba(59,130,246,0.08)" : "transparent",
-                    minHeight: "60px",
+                    background: isOpen ? "rgba(59,130,246,0.06)" : "var(--surface)",
+                    minHeight: "58px",
+                    transition: "background 140ms ease",
                   }}
                 >
                   <span
-                    className="flex-1 text-[14px] font-semibold leading-snug"
-                    style={{
-                      color: isOpen ? "var(--tf-primary)" : "var(--tf-text-primary)",
-                      fontFamily: "'DM Sans',sans-serif",
-                    }}
+                    className="text-[13px] font-semibold flex-1 leading-snug"
+                    style={{ color: isOpen ? "var(--blue)" : "var(--text-1)", fontFamily: "'Inter',sans-serif" }}
                   >
                     {faq.question}
                   </span>
                   <span
-                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                    className="w-6 h-6 flex items-center justify-center flex-shrink-0"
                     style={{
-                      background: isOpen ? "var(--tf-primary)" : "var(--tf-surface-2)",
-                      color: isOpen ? "#fff" : "var(--tf-text-secondary)",
-                      transform: isOpen ? "rotate(45deg)" : "rotate(0deg)",
-                      transition: "transform 200ms ease, background 200ms ease",
+                      background: isOpen ? "var(--blue)" : "var(--surface-2)",
+                      borderRadius: "var(--r-xs)",
+                      color: isOpen ? "#fff" : "var(--text-2)",
+                      transition: "all 160ms ease",
+                      transform: isOpen ? "rotate(45deg)" : "none",
                     }}
                   >
                     <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -136,13 +124,15 @@ export function FAQSection() {
                     </svg>
                   </span>
                 </button>
-
                 {isOpen && (
                   <div
                     className="px-5 pb-5"
-                    style={{ animation: "tf-slide-up 0.22s ease forwards" }}
+                    style={{
+                      background: "rgba(59,130,246,0.04)",
+                      animation: "slide-up 0.2s ease forwards",
+                    }}
                   >
-                    <p className="text-[13px] leading-relaxed" style={{ color: "var(--tf-text-secondary)", fontFamily: "'DM Sans',sans-serif" }}>
+                    <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-2)", fontFamily: "'Inter',sans-serif" }}>
                       {faq.answer}
                     </p>
                   </div>
@@ -151,6 +141,7 @@ export function FAQSection() {
             );
           })}
         </div>
+
       </div>
     </section>
   );
