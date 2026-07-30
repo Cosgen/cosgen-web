@@ -15,28 +15,28 @@ interface HeroProps {
 
 export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) {
   const [mounted, setMounted]           = useState(false);
-  const [headline, setHeadline]         = useState("Platform Order Interaktif");
+  const [headline, setHeadline]         = useState("Platform Interaktif");
   const [subheadline, setSubheadline]   = useState("CosplayGenerative");
   const [description, setDescription]   = useState("Transformasi foto cosplay dengan background premium serta sistem pemesanan yang jelas untuk memastikan setiap proses dapat dipantau dengan mudah.");
 
   useEffect(() => {
     setMounted(true);
+    // Clear legacy localStorage cache to prevent old headline/subheadline blinking
+    try {
+      const c = JSON.parse(localStorage.getItem("cosgen_site_content") || "null");
+      if (c?.hero) {
+        delete c.hero;
+        localStorage.setItem("cosgen_site_content", JSON.stringify(c));
+      }
+    } catch {}
+
     const load = () => {
-      try {
-        const c = JSON.parse(localStorage.getItem("cosgen_site_content") || "null");
-        if (c?.hero) {
-          if (c.hero.headline) setHeadline(c.hero.headline);
-          if (c.hero.subheadline) setSubheadline(c.hero.subheadline);
-          if (c.hero.description) setDescription(c.hero.description);
-        }
-      } catch {}
       fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
         .then(r => r.json()).then(d => {
           if (d.content?.hero) {
             if (d.content.hero.headline) setHeadline(d.content.hero.headline);
             if (d.content.hero.subheadline) setSubheadline(d.content.hero.subheadline);
             if (d.content.hero.description) setDescription(d.content.hero.description);
-            try { localStorage.setItem("cosgen_site_content", JSON.stringify(d.content)); } catch {}
           }
         }).catch(() => {});
     };
@@ -173,34 +173,34 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           padding: "60px clamp(16px,4vw,48px) 80px",
         }}
       >
-        {/* 1. Judul — Tebal (Bold) */}
+        {/* 1. Judul — Platform Interaktif (Tebal / Bold / Warna Hitam - --text-1) */}
         <h1
           suppressHydrationWarning
-          className="headline font-bold leading-[1.08] mb-1 text-slate-900 dark:text-white"
+          className="headline leading-[1.08] mb-2"
           style={{
             fontSize: "clamp(34px, 5.2vw, 70px)",
             maxWidth: "780px",
             color: "var(--text-1)",
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontWeight: 800,
             opacity: mounted ? 1 : 0,
             transition: "opacity 0.2s ease",
             animation: "slide-up 0.5s cubic-bezier(.22,1,.36,1) 0.05s both",
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontWeight: 700,
           }}
         >
           {headline}
         </h1>
 
-        {/* 2. Sub Judul — Sedang, Miring (Italic), Tidak Bold */}
+        {/* 2. Sub Judul — CosplayGenerative (Sedang / Tidak Bold / Warna Hitam - --text-1) */}
         <h2
           suppressHydrationWarning
-          className="italic mb-4"
+          className="mb-5"
           style={{
             fontSize: "clamp(20px, 2.8vw, 30px)",
-            color: "var(--blue)",
+            color: "var(--text-1)",
             fontFamily: "'Inter', sans-serif",
             fontWeight: 500,
-            fontStyle: "italic",
+            fontStyle: "normal",
             opacity: mounted ? 1 : 0,
             transition: "opacity 0.2s ease",
             animation: "slide-up 0.5s cubic-bezier(.22,1,.36,1) 0.1s both",
@@ -209,14 +209,15 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           {subheadline}
         </h2>
 
-        {/* 3. Deskripsi — Tipis (Light), Tidak Bold */}
+        {/* 3. Deskripsi — Transformasi foto cosplay... (Tipis / Tidak Bold / Warna Abu-Abu Pudar - --text-3) */}
         <p
           suppressHydrationWarning
           className="text-[15px] leading-relaxed max-w-xl mb-8"
           style={{
-            color: "var(--text-2)",
+            color: "var(--text-3)",
             fontFamily: "'Inter', sans-serif",
             fontWeight: 300,
+            fontStyle: "normal",
             opacity: mounted ? 1 : 0,
             transition: "opacity 0.2s ease",
             animation: "slide-up 0.5s cubic-bezier(.22,1,.36,1) 0.15s both",
@@ -270,15 +271,15 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           paddingRight: "20px",
         }}
       >
-        {/* 1. Judul — Tebal (Bold) */}
+        {/* 1. Judul — Platform Interaktif (Tebal / Bold / Warna Hitam - --text-1) */}
         <h1
           suppressHydrationWarning
-          className="headline font-bold leading-tight mb-1"
+          className="headline leading-tight mb-1"
           style={{
             fontSize: "26px",
             color: "var(--text-1)",
             fontFamily: "'Space Grotesk', sans-serif",
-            fontWeight: 700,
+            fontWeight: 800,
             opacity: mounted ? 1 : 0,
             transition: "opacity 0.2s ease",
           }}
@@ -286,16 +287,16 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           {headline}
         </h1>
 
-        {/* 2. Sub Judul — Sedang, Miring (Italic), Tidak Bold */}
+        {/* 2. Sub Judul — CosplayGenerative (Sedang / Tidak Bold / Warna Hitam - --text-1) */}
         <h2
           suppressHydrationWarning
-          className="italic mb-3"
+          className="mb-3"
           style={{
             fontSize: "18px",
-            color: "var(--blue)",
+            color: "var(--text-1)",
             fontFamily: "'Inter', sans-serif",
             fontWeight: 500,
-            fontStyle: "italic",
+            fontStyle: "normal",
             opacity: mounted ? 1 : 0,
             transition: "opacity 0.2s ease",
           }}
@@ -303,14 +304,15 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           {subheadline}
         </h2>
 
-        {/* 3. Deskripsi — Tipis (Light), Tidak Bold */}
+        {/* 3. Deskripsi — Transformasi foto cosplay... (Tipis / Tidak Bold / Warna Abu-Abu Pudar - --text-3) */}
         <p
           suppressHydrationWarning
           className="text-[13px] leading-relaxed mb-6"
           style={{
-            color: "var(--text-2)",
+            color: "var(--text-3)",
             fontFamily: "'Inter', sans-serif",
             fontWeight: 300,
+            fontStyle: "normal",
             maxWidth: "320px",
             opacity: mounted ? 1 : 0,
             transition: "opacity 0.2s ease",

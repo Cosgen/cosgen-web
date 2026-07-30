@@ -45,7 +45,7 @@ export const OFFICIAL_10_PORTFOLIO: PortfolioItem[] = [
 
 export const DEFAULT_SITE_CONTENT: SiteContentData = {
   hero: {
-    headline: "Platform Order Interaktif",
+    headline: "Platform Interaktif",
     subheadline: "CosplayGenerative",
     description: "Transformasi foto cosplay dengan background premium serta sistem pemesanan yang jelas untuk memastikan setiap proses dapat dipantau dengan mudah.",
     ctaText: "Pesan Sekarang",
