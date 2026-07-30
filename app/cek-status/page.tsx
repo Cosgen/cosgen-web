@@ -100,7 +100,9 @@ function getStepIndex(status: OrderData["status"]) {
     case "Menunggu Konfirmasi": return 1;
     case "Dalam Antrian": return 2;
     case "Sedang Dikerjakan": return 3;
-    case "Review": return 4;
+    case "Review":
+    case "Review Hasil":
+    case "Review Pelanggan": return 4;
     case "Menunggu Pembayaran": return 4;
     case "Selesai": return 5;
     case "Ditolak": return -1;
@@ -350,7 +352,7 @@ function CekStatusContent() {
               <span className={`self-start sm:self-center px-3 py-1.5 rounded-full text-[11px] font-black ${
                 currentOrder.status === "Menunggu Konfirmasi"
                   ? "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800"
-                  : currentOrder.status === "Review"
+                  : (currentOrder.status === "Review" || currentOrder.status === "Review Hasil" || currentOrder.status === "Review Pelanggan")
                   ? "bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 border border-violet-300 dark:border-violet-800"
                   : currentOrder.status === "Selesai"
                   ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800"
@@ -385,7 +387,7 @@ function CekStatusContent() {
             {/* Right details — 3 cols */}
             <div className="md:col-span-3 space-y-4">
               {/* Review banner */}
-              {currentOrder.status === "Review" && (
+              {(currentOrder.status === "Review" || currentOrder.status === "Review Hasil" || currentOrder.status === "Review Pelanggan") && (
                 <ReviewStatusBanner
                   orderCode={currentOrder.officialCode || currentOrder.code}
                   gdriveReviewUrl={currentOrder.gdriveReviewUrl}

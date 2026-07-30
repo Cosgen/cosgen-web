@@ -16,6 +16,8 @@ export interface OrderData {
     | "Dalam Antrian"
     | "Sedang Dikerjakan"
     | "Review"
+    | "Review Hasil"
+    | "Review Pelanggan"
     | "Menunggu Pembayaran"
     | "Selesai"
     | "Ditolak";
