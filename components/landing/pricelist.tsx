@@ -39,20 +39,25 @@ export function PricelistSection({ onSelectPackage }: PricelistSectionProps) {
   const activePackages = packages.filter((p) => p.isActive);
 
   return (
-    <section id="pricelist" className="py-16 sm:py-20 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-900 transition-colors">
+    <section id="pricelist" className="py-16 sm:py-24 transition-colors" style={{ background: "var(--tf-surface)" }}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
 
         {/* Heading */}
         <div className="text-center mb-12">
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.18em] mb-3">
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest mb-4"
+            style={{ background: "var(--tf-primary-light)", color: "var(--tf-primary)" }}
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+            </svg>
             Paket Layanan
           </span>
-          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-            Pilih Paket Terbaik Kamu
+          <h2 className="font-headline text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+            Pilih Paket Terbaik
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-3 max-w-md mx-auto leading-relaxed">
-            Mulai dari retouch simpel hingga full compositing CGI sinematik. Semua paket garansi revisi.
+          <p className="text-[15px] text-slate-500 dark:text-slate-400 mt-4 max-w-sm mx-auto leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            Dari retouch simpel hingga full CGI cinematic. Semua paket include revisi.
           </p>
         </div>
 
@@ -66,11 +71,19 @@ export function PricelistSection({ onSelectPackage }: PricelistSectionProps) {
             return (
               <div
                 key={pkg.id}
-                className={`relative flex flex-col rounded-3xl p-7 transition-all duration-300 ${
+                className={`relative flex flex-col rounded-[20px] p-6 sm:p-7 transition-all duration-300 ${
                   isPopular
-                    ? "bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 text-white shadow-2xl shadow-blue-600/30 ring-2 ring-blue-400/50 scale-[1.02] z-10"
-                    : "bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg hover:-translate-y-1"
+                    ? "text-white scale-[1.02] z-10"
+                    : "hover:-translate-y-1"
                 }`}
+                style={isPopular ? {
+                  background: "linear-gradient(135deg, #3B82F6 0%, #4F46E5 100%)",
+                  boxShadow: "0 12px 40px rgba(59,130,246,0.35), 0 0 0 2px rgba(99,102,241,0.3)",
+                } : {
+                  background: "var(--tf-bg)",
+                  border: "1.5px solid var(--tf-border)",
+                  boxShadow: "var(--tf-shadow-subtle)",
+                }}
               >
                 {/* Popular badge */}
                 {isPopular && (
@@ -142,13 +155,22 @@ export function PricelistSection({ onSelectPackage }: PricelistSectionProps) {
                 <button
                   type="button"
                   onClick={() => onSelectPackage && onSelectPackage(pkg.name)}
-                  className={`w-full py-3 rounded-2xl text-[12px] font-black transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] ${
-                    isPopular
-                      ? "bg-white text-blue-700 hover:bg-blue-50 shadow-xl"
-                      : "bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500 shadow-md"
-                  }`}
+                  className="w-full flex items-center justify-center gap-2 rounded-[14px] font-bold text-[14px] transition-all active:scale-[0.97] tf-press"
+                  style={isPopular ? {
+                    background: "#fff",
+                    color: "#2563EB",
+                    padding: "14px 20px",
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                    fontFamily: "'DM Sans', sans-serif",
+                  } : {
+                    background: "var(--tf-primary)",
+                    color: "#fff",
+                    padding: "14px 20px",
+                    boxShadow: "0 4px 12px rgba(59,130,246,0.3)",
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
                 >
-                  Mulai dengan {pkg.name} <ArrowRight className="w-3.5 h-3.5" />
+                  Pesan {pkg.name} <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             );

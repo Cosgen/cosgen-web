@@ -1,17 +1,22 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Figtree, DM_Sans } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({
+// TouchFlow Design System Fonts
+const figtree = Figtree({
   subsets: ["latin"],
-  variable: "--font-geist",
+  variable: "--font-figtree",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
-const geistMono = Geist_Mono({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-geist-mono",
+  variable: "--font-dm-sans",
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const midtransEnv = process.env.NEXT_PUBLIC_MIDTRANS_ENV || "sandbox";
@@ -28,9 +33,9 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="id"
       suppressHydrationWarning
-      className={cn("antialiased", geist.variable, geistMono.variable)}
+      className={cn("antialiased", figtree.variable, dmSans.variable)}
     >
       <body>
         <ThemeProvider>{children}</ThemeProvider>

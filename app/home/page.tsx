@@ -9,6 +9,8 @@ import { FAQSection } from "@/components/landing/faq-accordion";
 import { LandingFooter } from "@/components/landing/footer";
 import { OrderModal } from "@/components/landing/order-modal";
 import { SlotAvailabilityChecker } from "@/components/landing/slot-availability-checker";
+import { MobileBottomNav } from "@/components/landing/mobile-bottom-nav";
+import { TouchFlowNavbar } from "@/components/landing/touchflow-navbar";
 
 export default function HomePage() {
   const [orderModalOpen, setOrderModalOpen] = useState(false);
@@ -20,37 +22,53 @@ export default function HomePage() {
     setOrderModalOpen(true);
   };
 
+  const scrollToSection = (hash: string) => {
+    const el = document.querySelector(hash);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      history.replaceState(null, "", hash);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white selection:bg-blue-600 selection:text-white">
-      {/* Hero Section with Integrated Glass Pill Navbar */}
+    <div
+      className="min-h-screen selection:bg-blue-600 selection:text-white"
+      style={{ background: "var(--tf-bg)", color: "var(--tf-text-primary)" }}
+    >
+      {/* ── Desktop Floating Navbar (hidden on mobile) ─────────── */}
+      <TouchFlowNavbar
+        onOrderClick={() => handleOpenOrder()}
+        onSlotClick={() => setSlotCheckerOpen(true)}
+      />
+
+      {/* ── Hero Section (has its own mobile top bar + desktop nav) */}
       <HeroSection
         onOpenOrderModal={() => handleOpenOrder()}
         onOpenSlotChecker={() => setSlotCheckerOpen(true)}
       />
 
-      {/* Portfolio Section */}
+      {/* ── Portfolio ──────────────────────────────────────────── */}
       <PortfolioSection />
 
-      {/* Before & After Section */}
+      {/* ── Before & After Slider ──────────────────────────────── */}
       <BeforeAfterSliderSection />
 
-      {/* Pricelist Section */}
+      {/* ── Pricelist ──────────────────────────────────────────── */}
       <PricelistSection onSelectPackage={(pkg) => handleOpenOrder(pkg)} />
 
-      {/* FAQ Section */}
+      {/* ── FAQ ────────────────────────────────────────────────── */}
       <FAQSection />
 
-      {/* Footer */}
+      {/* ── Footer ─────────────────────────────────────────────── */}
       <LandingFooter />
 
-      {/* Order Modal */}
+      {/* ── Modals ─────────────────────────────────────────────── */}
       <OrderModal
         isOpen={orderModalOpen}
         onClose={() => setOrderModalOpen(false)}
         initialPackage={selectedPackage}
       />
 
-      {/* Slot Availability Checker Modal */}
       <SlotAvailabilityChecker
         isOpen={slotCheckerOpen}
         onClose={() => setSlotCheckerOpen(false)}
@@ -58,6 +76,15 @@ export default function HomePage() {
           setSlotCheckerOpen(false);
           setOrderModalOpen(true);
         }}
+      />
+
+      {/* ── Mobile Bottom Navigation (mobile only) ─────────────── */}
+      <MobileBottomNav
+        onOrderClick={() => handleOpenOrder()}
+        onSlotClick={() => setSlotCheckerOpen(true)}
+        onStatusClick={() => { window.location.href = "/cek-status"; }}
+        onPortfolioClick={() => scrollToSection("#portfolio")}
+        onPriceClick={() => scrollToSection("#pricelist")}
       />
     </div>
   );

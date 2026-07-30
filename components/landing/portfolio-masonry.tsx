@@ -119,35 +119,35 @@ export function PortfolioSection() {
     filter === "Semua" ? items : items.filter((p) => p.category === filter);
 
   return (
-    <section id="portfolio" className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 transition-colors">
+    <section id="portfolio" className="py-16 sm:py-24 transition-colors" style={{ background: "var(--tf-surface)" }}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Heading row */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.18em] mb-2">
-              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <span
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest mb-4"
+              style={{ background: "var(--tf-primary-light)", color: "var(--tf-primary)" }}
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
                 <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
               </svg>
               Portofolio
             </span>
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-              See All Works
+            <h2 className="font-headline text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+              Karya Terbaik
             </h2>
           </div>
 
-          {/* Filter pills */}
-          <div className="flex items-center gap-2">
+          {/* Filter chips — TouchFlow style */}
+          <div className="flex items-center gap-2 flex-wrap">
             {(["Semua", "Regular", "Background Premium"] as const).map((cat) => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => setFilter(cat)}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${
-                  filter === cat
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                    : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600"
-                }`}
+                className="tf-chip tf-chip-filter tf-press-sm"
+                style={{ background: filter === cat ? "var(--tf-primary-light)" : "var(--tf-bg)", color: filter === cat ? "var(--tf-primary)" : "var(--tf-text-secondary)", border: `1.5px solid ${filter === cat ? "var(--tf-primary)" : "var(--tf-border)"}` }}
               >
                 {cat}
               </button>
