@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 const NAV_ITEMS = [
   {
@@ -117,13 +117,14 @@ export function MobileBottomNav({
     <div
       className="md:hidden fixed bottom-0 left-0 right-0 z-[100]"
       style={{
-        background: "rgba(9,14,26,0.97)",
+        background: "var(--surface)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
-        borderTop: "1px solid rgba(255,255,255,0.07)",
+        borderTop: "1px solid var(--border-md)",
         paddingBottom: "var(--sab, 0px)",
-        transform: "translateZ(0)",   /* force GPU layer — never disappears */
+        transform: "translateZ(0)",
         willChange: "auto",
+        boxShadow: "0 -4px 20px rgba(0,0,0,0.15)",
       }}
     >
       <nav
@@ -151,7 +152,7 @@ export function MobileBottomNav({
                     background: "var(--blue)",
                     borderRadius: "10px",
                     boxShadow: "var(--shadow-blue-lg)",
-                    border: "2px solid rgba(255,255,255,0.12)",
+                    border: "2px solid rgba(255,255,255,0.2)",
                   }}
                 >
                   {item.icon}
