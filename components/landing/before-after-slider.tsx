@@ -1,22 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 
-const BEFORE_IMG = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785416895/before_kcaobw.jpg";
-const AFTER_IMG  = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785417346/after_eewuyf.jpg";
+// Optimized Cloudinary image URLs for high performance & silky smooth mobile dragging
+const BEFORE_IMG = "https://res.cloudinary.com/or0nvx0c/image/upload/f_auto,q_auto,w_1000/v1785416895/before_kcaobw.jpg";
+const AFTER_IMG  = "https://res.cloudinary.com/or0nvx0c/image/upload/f_auto,q_auto,w_1000/v1785417346/after_eewuyf.jpg";
 
 export function BeforeAfterSliderSection() {
   const [sliderPos, setSliderPos] = useState(50);
   const [dragging, setDragging]   = useState(false);
+  const animRef                   = useRef<number | null>(null);
 
   const move = (clientX: number, rect: DOMRect) => {
-    const pct = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
-    setSliderPos(pct);
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+    animRef.current = requestAnimationFrame(() => {
+      const pct = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+      setSliderPos(pct);
+    });
   };
 
   return (
-    <section id="compare" className="section" style={{ background: "var(--bg)" }}>
-      <div className="container">
+    <section id="compare" className="section overflow-hidden w-full max-w-full" style={{ background: "var(--bg)" }}>
+      <div className="container overflow-hidden max-w-full">
 
         {/* Header */}
         <div className="text-center mb-10">
@@ -36,7 +41,7 @@ export function BeforeAfterSliderSection() {
 
         {/* Comparison card container */}
         <div
-          className="overflow-hidden mx-auto"
+          className="overflow-hidden mx-auto w-full max-w-full"
           style={{
             maxWidth: 860,
             borderRadius: "var(--r-2xl)",
@@ -45,20 +50,22 @@ export function BeforeAfterSliderSection() {
             background: "var(--surface)",
           }}
         >
-          {/* Image area — Fixed aspect ratio 16:9 for 100% identical sizing */}
+          {/* Image area — Fixed aspect ratio 16:9, touch-action: none for zero-lag dragging */}
           <div
-            className="relative select-none w-full"
+            className="relative select-none w-full max-w-full overflow-hidden"
             style={{
               aspectRatio: "16/9",
-              minHeight: "260px",
+              minHeight: "220px",
               maxHeight: "520px",
               cursor: "ew-resize",
-              overflow: "hidden",
+              touchAction: "none",
+              WebkitTouchCallout: "none",
             }}
             onMouseDown={() => setDragging(true)}
             onMouseUp={() => setDragging(false)}
             onMouseLeave={() => setDragging(false)}
             onMouseMove={e => { if (dragging) move(e.clientX, e.currentTarget.getBoundingClientRect()); }}
+            onTouchStart={e => move(e.touches[0].clientX, e.currentTarget.getBoundingClientRect())}
             onTouchMove={e => move(e.touches[0].clientX, e.currentTarget.getBoundingClientRect())}
           >
             {/* AFTER — Base Layer */}
@@ -74,7 +81,7 @@ export function BeforeAfterSliderSection() {
                 objectFit: "cover",
                 objectPosition: "center center",
                 display: "block",
-                transform: "none",
+                transform: "translateZ(0)",
                 margin: 0,
                 padding: 0,
               }}
@@ -84,7 +91,7 @@ export function BeforeAfterSliderSection() {
               <span className="label label-blue" style={{ fontSize: "10px" }}>After — CGI Edit</span>
             </div>
 
-            {/* BEFORE — Clipped Layer (Identical sizing, positioning & objectFit) */}
+            {/* BEFORE — Clipped Layer */}
             <img
               src={BEFORE_IMG}
               alt="Before — Foto Asli"
@@ -97,7 +104,7 @@ export function BeforeAfterSliderSection() {
                 objectFit: "cover",
                 objectPosition: "center center",
                 display: "block",
-                transform: "none",
+                transform: "translateZ(0)",
                 margin: 0,
                 padding: 0,
                 clipPath: `inset(0 ${100 - sliderPos}% 0 0)`,
@@ -130,6 +137,7 @@ export function BeforeAfterSliderSection() {
                 boxShadow: "0 0 14px rgba(0,0,0,0.5)",
                 zIndex: 30,
                 pointerEvents: "none",
+                transform: "translateZ(0)",
               }}
             >
               <div
