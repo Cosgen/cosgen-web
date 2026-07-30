@@ -63,9 +63,7 @@ export function LandingNavbar({
           >
             Portofolio
           </Link>
-          <Link href="/portfolio" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1">
-            <Layers className="w-3 h-3" /> Galeri
-          </Link>
+
           <Link
             href={getAnchorHref("compare")}
             onClick={(e) => handleNavClick(e, "compare")}
@@ -146,7 +144,7 @@ export function LandingNavbar({
             >
               Portofolio
             </Link>
-            <Link href="/portfolio" onClick={() => setMobileMenuOpen(false)}>Galeri Lengkap</Link>
+
             <Link
               href={getAnchorHref("compare")}
               onClick={(e) => { setMobileMenuOpen(false); handleNavClick(e, "compare"); }}
