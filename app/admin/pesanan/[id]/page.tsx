@@ -15,7 +15,7 @@ import {
   Folder,
   FileText,
 } from "lucide-react";
-import { getStoredOrders, updateSingleOrder, deleteSingleOrder, OrderData } from "@/lib/order-store";
+import { getStoredOrders, updateSingleOrder, deleteSingleOrder, syncGlobalOrdersFromServer, OrderData } from "@/lib/order-store";
 import { RejectionReasonModal } from "@/components/admin/rejection-reason-modal";
 import { ConfirmAccButton } from "@/components/admin/confirm-acc-button";
 import { EditPhotoCountForm } from "@/components/admin/edit-photo-count-form";
@@ -40,14 +40,35 @@ export default function AdminOrderDetailPage() {
   const [gdriveFinalInput, setGdriveFinalInput] = useState("");
 
   useEffect(() => {
-    const orders = getStoredOrders();
-    const found = orders.find((o) => o.id === orderId) || orders[2];
-    setOrder(found);
-    if (found) {
-      setCustomerGdriveInput(found.customerGdriveUrl || "");
-      setGdriveReviewInput(found.gdriveReviewUrl || "");
-      setGdriveFinalInput(found.gdriveFinalUrl || "");
-    }
+    const loadOrder = () => {
+      const orders = getStoredOrders();
+      const found =
+        orders.find(
+          (o) =>
+            o.id === orderId ||
+            o.code === orderId ||
+            (o.officialCode && o.officialCode === orderId) ||
+            (o.tempCode && o.tempCode === orderId)
+        ) || orders[0];
+
+      if (found) {
+        setOrder(found);
+        setCustomerGdriveInput(found.customerGdriveUrl || "");
+        setGdriveReviewInput(found.gdriveReviewUrl || "");
+        setGdriveFinalInput(found.gdriveFinalUrl || "");
+      }
+    };
+
+    loadOrder();
+    syncGlobalOrdersFromServer().then(() => loadOrder());
+
+    const handleUpdate = () => loadOrder();
+    window.addEventListener("cosgen_orders_updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener("cosgen_orders_updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
   }, [orderId]);
 
   if (!order) return null;
@@ -61,12 +82,16 @@ export default function AdminOrderDetailPage() {
   };
 
   const handleStatusDropdownChange = (newStatus: OrderData["status"]) => {
+    const isReview =
+      newStatus === "Review" ||
+      newStatus === "Review Hasil" ||
+      newStatus === "Review Pelanggan";
+
     saveChanges({
       status: newStatus,
-      reviewStartedAt:
-        newStatus === "Review"
-          ? order.reviewStartedAt || new Date().toISOString()
-          : order.reviewStartedAt,
+      reviewStartedAt: isReview
+        ? order.reviewStartedAt || new Date().toISOString()
+        : order.reviewStartedAt,
       isAccByAdmin:
         newStatus === "Menunggu Pembayaran" || newStatus === "Selesai"
           ? true
@@ -177,6 +202,7 @@ export default function AdminOrderDetailPage() {
               <option value="Dalam Antrian">Dalam Antrian</option>
               <option value="Sedang Dikerjakan">Sedang Dikerjakan</option>
               <option value="Review">Review</option>
+              <option value="Review Hasil">Review Hasil</option>
               <option value="Menunggu Pembayaran">Menunggu Pembayaran</option>
               <option value="Selesai">Selesai</option>
               <option value="Ditolak">Ditolak</option>
