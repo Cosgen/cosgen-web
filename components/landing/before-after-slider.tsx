@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 
-// Cloudinary images transformed with c_fill,g_center so both are served at exact identical proportions
-const BEFORE_IMG = "https://res.cloudinary.com/or0nvx0c/image/upload/c_fill,g_center,w_1200,h_750,q_85/v1785416895/before_kcaobw.jpg";
-const AFTER_IMG  = "https://res.cloudinary.com/or0nvx0c/image/upload/c_fill,g_center,w_1200,h_750,q_85/v1785183997/Pic_1_r4qbhs.jpg";
+const BEFORE_IMG = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785416895/before_kcaobw.jpg";
+const AFTER_IMG  = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785417346/after_eewuyf.jpg";
 
 export function BeforeAfterSliderSection() {
   const [sliderPos, setSliderPos] = useState(50);
