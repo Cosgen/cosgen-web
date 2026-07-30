@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 
-const BEFORE_IMG = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785416895/before_kcaobw.jpg";
-const AFTER_IMG  = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785183997/Pic_1_r4qbhs.jpg";
+// Cloudinary images transformed with c_fill,g_center so both are served at exact identical proportions
+const BEFORE_IMG = "https://res.cloudinary.com/or0nvx0c/image/upload/c_fill,g_center,w_1200,h_750,q_85/v1785416895/before_kcaobw.jpg";
+const AFTER_IMG  = "https://res.cloudinary.com/or0nvx0c/image/upload/c_fill,g_center,w_1200,h_750,q_85/v1785183997/Pic_1_r4qbhs.jpg";
 
 export function BeforeAfterSliderSection() {
   const [sliderPos, setSliderPos] = useState(50);
@@ -34,7 +35,7 @@ export function BeforeAfterSliderSection() {
           </p>
         </div>
 
-        {/* Comparison card */}
+        {/* Comparison card container */}
         <div
           className="overflow-hidden mx-auto"
           style={{
@@ -45,35 +46,64 @@ export function BeforeAfterSliderSection() {
             background: "var(--surface)",
           }}
         >
-          {/* Image area */}
+          {/* Image area — Fixed aspect ratio 16:9 for 100% identical sizing */}
           <div
-            className="relative select-none"
-            style={{ height: "clamp(240px, 48vw, 500px)", cursor: "ew-resize", overflow: "hidden" }}
+            className="relative select-none w-full"
+            style={{
+              aspectRatio: "16/9",
+              minHeight: "260px",
+              maxHeight: "520px",
+              cursor: "ew-resize",
+              overflow: "hidden",
+            }}
             onMouseDown={() => setDragging(true)}
             onMouseUp={() => setDragging(false)}
             onMouseLeave={() => setDragging(false)}
             onMouseMove={e => { if (dragging) move(e.clientX, e.currentTarget.getBoundingClientRect()); }}
             onTouchMove={e => move(e.touches[0].clientX, e.currentTarget.getBoundingClientRect())}
           >
-            {/* AFTER — base layer */}
+            {/* AFTER — Base Layer */}
             <img
               src={AFTER_IMG}
               alt="After — Hasil CGI"
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center center",
+                display: "block",
+                transform: "none",
+                margin: 0,
+                padding: 0,
+              }}
               draggable={false}
             />
             <div className="absolute top-3 right-3 z-20">
               <span className="label label-blue" style={{ fontSize: "10px" }}>After — CGI Edit</span>
             </div>
 
-            {/* BEFORE — clipped via clip-path: inset (NO RESIZING or DISTORTION) */}
+            {/* BEFORE — Clipped Layer (Identical sizing, positioning & objectFit) */}
             <img
               src={BEFORE_IMG}
               alt="Before — Foto Asli"
               style={{
-                position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block",
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center center",
+                display: "block",
+                transform: "none",
+                margin: 0,
+                padding: 0,
                 clipPath: `inset(0 ${100 - sliderPos}% 0 0)`,
                 WebkitClipPath: `inset(0 ${100 - sliderPos}% 0 0)`,
+                willChange: "clip-path",
               }}
               draggable={false}
             />
@@ -92,25 +122,33 @@ export function BeforeAfterSliderSection() {
             {/* Divider line + handle */}
             <div
               style={{
-                position: "absolute", top: 0, bottom: 0, left: `${sliderPos}%`,
+                position: "absolute",
+                top: 0,
+                bottom: 0,
+                left: `${sliderPos}%`,
                 width: 2,
-                background: "rgba(255,255,255,0.9)",
-                boxShadow: "0 0 12px rgba(0,0,0,0.4)",
+                background: "rgba(255,255,255,0.95)",
+                boxShadow: "0 0 14px rgba(0,0,0,0.5)",
                 zIndex: 30,
                 pointerEvents: "none",
               }}
             >
               <div
                 style={{
-                  position: "absolute", top: "50%",
+                  position: "absolute",
+                  top: "50%",
                   transform: "translate(-50%, -50%)",
-                  width: 40, height: 40,
+                  width: 40,
+                  height: 40,
                   background: "var(--surface)",
                   borderRadius: "var(--r-md)",
                   border: "2.5px solid var(--blue)",
                   boxShadow: "var(--shadow-lg)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  pointerEvents: "auto", cursor: "ew-resize",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  pointerEvents: "auto",
+                  cursor: "ew-resize",
                 }}
               >
                 <svg style={{ color: "var(--blue)", width: 18, height: 18 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -120,14 +158,16 @@ export function BeforeAfterSliderSection() {
             </div>
           </div>
 
-          {/* Range bar — light & dark mode ready */}
+          {/* Range control bar */}
           <div
             className="flex items-center gap-4 px-6 py-3.5"
             style={{ background: "var(--surface-2)", borderTop: "1px solid var(--border)" }}
           >
             <span className="text-[10px] font-bold uppercase tracking-widest w-12 text-right shrink-0" style={{ color: "var(--text-3)", fontFamily: "'Inter',sans-serif" }}>Before</span>
             <input
-              type="range" min="0" max="100"
+              type="range"
+              min="0"
+              max="100"
               value={sliderPos}
               onChange={e => setSliderPos(Number(e.target.value))}
               className="flex-1 cursor-pointer accent-blue-500"
