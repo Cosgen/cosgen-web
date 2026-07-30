@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 export interface HeroContent {
   headline: string;
   subheadline: string;
+  description?: string;
   ctaText?: string;
   fontFamily?: string;
 }
@@ -44,8 +45,9 @@ export const OFFICIAL_10_PORTFOLIO: PortfolioItem[] = [
 
 export const DEFAULT_SITE_CONTENT: SiteContentData = {
   hero: {
-    headline: "Ubah Foto Cosplay Jadi Mahakarya",
-    subheadline: "Layanan editing visual profesional — Cosplay, CGI & Background Premium sinematik.",
+    headline: "Platform Order Interaktif",
+    subheadline: "CosplayGenerative",
+    description: "Transformasi foto cosplay dengan background premium serta sistem pemesanan yang jelas untuk memastikan setiap proses dapat dipantau dengan mudah.",
     ctaText: "Pesan Sekarang",
   },
   faqs: [

@@ -15,8 +15,9 @@ interface HeroProps {
 
 export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) {
   const [mounted, setMounted]           = useState(false);
-  const [headline, setHeadline]         = useState("Ubah Foto Cosplay Jadi Mahakarya");
-  const [subheadline, setSubheadline]   = useState("Platform Order Interaktif");
+  const [headline, setHeadline]         = useState("Platform Order Interaktif");
+  const [subheadline, setSubheadline]   = useState("CosplayGenerative");
+  const [description, setDescription]   = useState("Transformasi foto cosplay dengan background premium serta sistem pemesanan yang jelas untuk memastikan setiap proses dapat dipantau dengan mudah.");
 
   useEffect(() => {
     setMounted(true);
@@ -26,6 +27,7 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
         if (c?.hero) {
           if (c.hero.headline) setHeadline(c.hero.headline);
           if (c.hero.subheadline) setSubheadline(c.hero.subheadline);
+          if (c.hero.description) setDescription(c.hero.description);
         }
       } catch {}
       fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
@@ -33,6 +35,7 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           if (d.content?.hero) {
             if (d.content.hero.headline) setHeadline(d.content.hero.headline);
             if (d.content.hero.subheadline) setSubheadline(d.content.hero.subheadline);
+            if (d.content.hero.description) setDescription(d.content.hero.description);
             try { localStorage.setItem("cosgen_site_content", JSON.stringify(d.content)); } catch {}
           }
         }).catch(() => {});
@@ -170,36 +173,56 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           padding: "60px clamp(16px,4vw,48px) 80px",
         }}
       >
-        {/* Headline */}
+        {/* 1. Judul — Tebal (Bold) */}
         <h1
           suppressHydrationWarning
-          className="headline leading-[1.08] mb-3"
+          className="headline font-bold leading-[1.08] mb-1 text-slate-900 dark:text-white"
           style={{
-            fontSize: "clamp(36px, 5.5vw, 76px)",
-            maxWidth: "740px",
+            fontSize: "clamp(34px, 5.2vw, 70px)",
+            maxWidth: "780px",
             color: "var(--text-1)",
             opacity: mounted ? 1 : 0,
             transition: "opacity 0.2s ease",
             animation: "slide-up 0.5s cubic-bezier(.22,1,.36,1) 0.05s both",
             fontFamily: "'Space Grotesk', sans-serif",
+            fontWeight: 700,
           }}
         >
           {headline}
         </h1>
 
-        {/* Sub-headline: Platform Order Interaktif */}
-        <p
+        {/* 2. Sub Judul — Sedang, Miring (Italic), Tidak Bold */}
+        <h2
           suppressHydrationWarning
-          className="text-[18px] font-semibold leading-relaxed max-w-lg mb-8"
+          className="italic mb-4"
           style={{
+            fontSize: "clamp(20px, 2.8vw, 30px)",
             color: "var(--blue)",
-            fontFamily: "'Inter',sans-serif",
+            fontFamily: "'Inter', sans-serif",
+            fontWeight: 500,
+            fontStyle: "italic",
             opacity: mounted ? 1 : 0,
             transition: "opacity 0.2s ease",
-            animation: "slide-up 0.5s cubic-bezier(.22,1,.36,1) 0.12s both",
+            animation: "slide-up 0.5s cubic-bezier(.22,1,.36,1) 0.1s both",
           }}
         >
           {subheadline}
+        </h2>
+
+        {/* 3. Deskripsi — Tipis (Light), Tidak Bold */}
+        <p
+          suppressHydrationWarning
+          className="text-[15px] leading-relaxed max-w-xl mb-8"
+          style={{
+            color: "var(--text-2)",
+            fontFamily: "'Inter', sans-serif",
+            fontWeight: 300,
+            opacity: mounted ? 1 : 0,
+            transition: "opacity 0.2s ease",
+            animation: "slide-up 0.5s cubic-bezier(.22,1,.36,1) 0.15s both",
+          }}
+        >
+          {description}
         </p>
 
         {/* CTAs */}
@@ -247,14 +270,15 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           paddingRight: "20px",
         }}
       >
-        {/* Text */}
+        {/* 1. Judul — Tebal (Bold) */}
         <h1
           suppressHydrationWarning
-          className="headline leading-tight mb-2"
+          className="headline font-bold leading-tight mb-1"
           style={{
-            fontSize: "28px",
+            fontSize: "26px",
             color: "var(--text-1)",
             fontFamily: "'Space Grotesk', sans-serif",
+            fontWeight: 700,
             opacity: mounted ? 1 : 0,
             transition: "opacity 0.2s ease",
           }}
@@ -262,13 +286,37 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
           {headline}
         </h1>
 
-        {/* Sub-headline: Platform Order Interaktif */}
-        <p
+        {/* 2. Sub Judul — Sedang, Miring (Italic), Tidak Bold */}
+        <h2
           suppressHydrationWarning
-          className="text-[15px] font-semibold leading-relaxed mb-6"
-          style={{ color: "var(--blue)", fontFamily: "'Inter',sans-serif", maxWidth: "320px", opacity: mounted ? 1 : 0, transition: "opacity 0.2s ease" }}
+          className="italic mb-3"
+          style={{
+            fontSize: "18px",
+            color: "var(--blue)",
+            fontFamily: "'Inter', sans-serif",
+            fontWeight: 500,
+            fontStyle: "italic",
+            opacity: mounted ? 1 : 0,
+            transition: "opacity 0.2s ease",
+          }}
         >
           {subheadline}
+        </h2>
+
+        {/* 3. Deskripsi — Tipis (Light), Tidak Bold */}
+        <p
+          suppressHydrationWarning
+          className="text-[13px] leading-relaxed mb-6"
+          style={{
+            color: "var(--text-2)",
+            fontFamily: "'Inter', sans-serif",
+            fontWeight: 300,
+            maxWidth: "320px",
+            opacity: mounted ? 1 : 0,
+            transition: "opacity 0.2s ease",
+          }}
+        >
+          {description}
         </p>
 
         {/* Quick action grid */}
