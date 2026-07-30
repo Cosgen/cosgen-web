@@ -8,42 +8,25 @@ const HERO_BG    = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785188133
 const WHITE_LOGO = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785184391/Logo_Putih_01_xozs8n.png";
 const COLOR_LOGO = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785184392/Logo_Warna_01_y5dpcm.png";
 
+// Exact permanent hero text strings — no network fetch blinking
+const HERO_HEADLINE    = "Platform Interaktif";
+const HERO_SUBHEADLINE = "CosplayGenerative";
+const HERO_DESCRIPTION = "Transformasi foto cosplay dengan background premium serta sistem pemesanan yang jelas untuk memastikan setiap proses dapat dipantau dengan mudah.";
+
 interface HeroProps {
   onOpenOrderModal: () => void;
   onOpenSlotChecker?: () => void;
 }
 
 export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) {
-  const [mounted, setMounted]           = useState(false);
-  const [headline, setHeadline]         = useState("Platform Interaktif");
-  const [subheadline, setSubheadline]   = useState("CosplayGenerative");
-  const [description, setDescription]   = useState("Transformasi foto cosplay dengan background premium serta sistem pemesanan yang jelas untuk memastikan setiap proses dapat dipantau dengan mudah.");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    // Clear legacy localStorage cache to prevent old headline/subheadline blinking
+    // Clear legacy localStorage cache
     try {
-      const c = JSON.parse(localStorage.getItem("cosgen_site_content") || "null");
-      if (c?.hero) {
-        delete c.hero;
-        localStorage.setItem("cosgen_site_content", JSON.stringify(c));
-      }
+      localStorage.removeItem("cosgen_site_content");
     } catch {}
-
-    const load = () => {
-      fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
-        .then(r => r.json()).then(d => {
-          if (d.content?.hero) {
-            if (d.content.hero.headline) setHeadline(d.content.hero.headline);
-            if (d.content.hero.subheadline) setSubheadline(d.content.hero.subheadline);
-            if (d.content.hero.description) setDescription(d.content.hero.description);
-          }
-        }).catch(() => {});
-    };
-    load();
-    window.addEventListener("cosgen_content_updated", load);
-    window.addEventListener("storage", load);
-    return () => { window.removeEventListener("cosgen_content_updated", load); window.removeEventListener("storage", load); };
   }, []);
 
   const scrollTo = (hash: string) => {
@@ -188,7 +171,7 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
             animation: "slide-up 0.5s cubic-bezier(.22,1,.36,1) 0.05s both",
           }}
         >
-          {headline}
+          {HERO_HEADLINE}
         </h1>
 
         {/* 2. Sub Judul — CosplayGenerative (Sedang / Tidak Bold / Warna Hitam - --text-1) */}
@@ -206,7 +189,7 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
             animation: "slide-up 0.5s cubic-bezier(.22,1,.36,1) 0.1s both",
           }}
         >
-          {subheadline}
+          {HERO_SUBHEADLINE}
         </h2>
 
         {/* 3. Deskripsi — Transformasi foto cosplay... (Tipis / Tidak Bold / Warna Abu-Abu Pudar - --text-3) */}
@@ -223,7 +206,7 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
             animation: "slide-up 0.5s cubic-bezier(.22,1,.36,1) 0.15s both",
           }}
         >
-          {description}
+          {HERO_DESCRIPTION}
         </p>
 
         {/* CTAs */}
@@ -284,7 +267,7 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
             transition: "opacity 0.2s ease",
           }}
         >
-          {headline}
+          {HERO_HEADLINE}
         </h1>
 
         {/* 2. Sub Judul — CosplayGenerative (Sedang / Tidak Bold / Warna Hitam - --text-1) */}
@@ -301,7 +284,7 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
             transition: "opacity 0.2s ease",
           }}
         >
-          {subheadline}
+          {HERO_SUBHEADLINE}
         </h2>
 
         {/* 3. Deskripsi — Transformasi foto cosplay... (Tipis / Tidak Bold / Warna Abu-Abu Pudar - --text-3) */}
@@ -318,7 +301,7 @@ export function HeroSection({ onOpenOrderModal, onOpenSlotChecker }: HeroProps) 
             transition: "opacity 0.2s ease",
           }}
         >
-          {description}
+          {HERO_DESCRIPTION}
         </p>
 
         {/* Quick action grid */}

@@ -29,43 +29,15 @@ const ITEMS_PER_PAGE = 6;
 
 export function PortfolioSection() {
   const [mounted,     setMounted]     = useState(false);
-  const [items,       setItems]       = useState<PortfolioItem[]>(OFFICIAL_10_PORTFOLIO);
   const [filter,      setFilter]      = useState<"Semua" | "Regular" | "Background Premium">("Semua");
   const [currentPage, setCurrentPage] = useState(1);
   const [lightbox,    setLightbox]    = useState<PortfolioItem | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    // Clear legacy local storage to prevent blinking of old items
-    try {
-      const c = JSON.parse(localStorage.getItem("cosgen_site_content") || "null");
-      if (c?.portfolio) {
-        delete c.portfolio;
-        localStorage.setItem("cosgen_site_content", JSON.stringify(c));
-      }
-    } catch {}
-
-    const load = () => {
-      fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
-        .then(r => r.json()).then(d => {
-          if (d.content?.portfolio?.length) {
-            const valid = d.content.portfolio
-              .filter((p: any) => p.image && p.image.includes("cloudinary.com"))
-              .map((p: any, i: number) => ({
-                id: p.id || `p-${i}`,
-                title: p.title || `Cosplay ${String(i + 1).padStart(2, "0")}`,
-                category: p.category === "Background Premium" ? "Background Premium" : "Regular",
-                imageUrl: p.image || p.imageUrl || "",
-              }));
-            if (valid.length) setItems(valid);
-          }
-        }).catch(() => {});
-    };
-    load();
-    window.addEventListener("cosgen_content_updated", load);
-    window.addEventListener("storage", load);
-    return () => { window.removeEventListener("cosgen_content_updated", load); window.removeEventListener("storage", load); };
   }, []);
+
+  const items = OFFICIAL_10_PORTFOLIO;
 
   // Filter items
   const filtered = filter === "Semua" ? items : items.filter(p => p.category === filter);
