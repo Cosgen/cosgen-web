@@ -202,7 +202,6 @@ export default function AdminOrderDetailPage() {
               <option value="Dalam Antrian">Dalam Antrian</option>
               <option value="Sedang Dikerjakan">Sedang Dikerjakan</option>
               <option value="Review">Review</option>
-              <option value="Review Hasil">Review Hasil</option>
               <option value="Menunggu Pembayaran">Menunggu Pembayaran</option>
               <option value="Selesai">Selesai</option>
               <option value="Ditolak">Ditolak</option>
