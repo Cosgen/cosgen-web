@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Sparkles } from "lucide-react";
-import { getStoredOrders, syncGlobalOrdersFromServer } from "@/lib/order-store";
 
 interface SlotAvailabilityCheckerProps {
   isOpen: boolean;
@@ -15,32 +14,76 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
   const [usedSlots, setUsedSlots]   = useState(0);
   const [holidays, setHolidays]     = useState<number[]>([]);
 
+  // Client-calculated calendar state to guarantee exact day-1 weekday placement
+  const [calendarData, setCalendarData] = useState<{
+    currentMonthLabel: string;
+    days: number[];
+    paddingArray: number[];
+    todayDate: number;
+  }>({
+    currentMonthLabel: "Bulan Ini",
+    days: Array.from({ length: 31 }, (_, i) => i + 1),
+    paddingArray: [],
+    todayDate: new Date().getDate(),
+  });
+
+  // Calculate exact calendar date offset on client side
+  useEffect(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth(); // 0-indexed: 0 = Jan, 6 = July
+    const todayDate = now.getDate();
+
+    const MONTH_NAMES = [
+      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+    const currentMonthLabel = `${MONTH_NAMES[month]} ${year}`;
+
+    // Total days in current month (28, 29, 30, 31)
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+    // Weekday of the 1st of current month (0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat)
+    const firstDayWeekday = new Date(year, month, 1).getDay();
+
+    // Convert to Monday-first grid padding: Mon(1)->0, Tue(2)->1, Wed(3)->2, Thu(4)->3, Fri(5)->4, Sat(6)->5, Sun(0)->6
+    const paddingOffset = firstDayWeekday === 0 ? 6 : firstDayWeekday - 1;
+    const paddingArray = Array.from({ length: paddingOffset }, (_, i) => i);
+
+    setCalendarData({
+      currentMonthLabel,
+      days,
+      paddingArray,
+      todayDate,
+    });
+  }, []);
+
+  // Fetch live real-time slots directly from server API whenever opened
   useEffect(() => {
     if (!isOpen) return;
 
     const loadRealtimeSlots = async () => {
-      // 1. Calculate active orders from local storage
-      const orders = getStoredOrders();
-      const activeLocal = orders.filter((o) => o.status !== "Ditolak");
-      setUsedSlots(activeLocal.length);
-
-      // 2. Fetch latest orders from server to ensure 100% database sync
+      // 1. Fetch server order count directly
       try {
-        const latest = await syncGlobalOrdersFromServer();
-        if (latest && Array.isArray(latest)) {
-          const activeLatest = latest.filter((o) => o.status !== "Ditolak");
-          setUsedSlots(activeLatest.length);
+        const res = await fetch(`/api/orders?t=${Date.now()}`, { cache: "no-store" });
+        if (res.ok) {
+          const d = await res.json();
+          if (d.orders && Array.isArray(d.orders)) {
+            const activeOrders = d.orders.filter((o: any) => o.status !== "Ditolak");
+            setUsedSlots(activeOrders.length);
+          }
         }
       } catch (e) {
-        console.warn("Order sync notice:", e);
+        console.warn("Direct order fetch notice:", e);
       }
 
-      // 3. Load scheduler settings from API / localStorage
+      // 2. Load scheduler settings from server API
       try {
         const res = await fetch(`/api/scheduler?t=${Date.now()}`, { cache: "no-store" });
         const d = await res.json();
         if (d && d.settings) {
-          if (d.settings.totalSlots) setTotalSlots(d.settings.totalSlots);
+          if (typeof d.settings.totalSlots === "number") setTotalSlots(d.settings.totalSlots);
           if (Array.isArray(d.settings.holidays)) setHolidays(d.settings.holidays);
           localStorage.setItem("cosgen_scheduler_data", JSON.stringify(d.settings));
         }
@@ -49,11 +92,9 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
         if (saved) {
           try {
             const p = JSON.parse(saved);
-            if (p.totalSlots) setTotalSlots(p.totalSlots);
+            if (typeof p.totalSlots === "number") setTotalSlots(p.totalSlots);
             if (p.holidays && Array.isArray(p.holidays)) setHolidays(p.holidays);
-          } catch (err) {
-            console.error(err);
-          }
+          } catch {}
         }
       }
     };
@@ -65,28 +106,6 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
 
   const remaining = Math.max(0, totalSlots - usedSlots);
   const pct = Math.round((usedSlots / totalSlots) * 100);
-
-  // Dynamic Month & Calendar Calculation
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth(); // 0-indexed (0 = Jan, 6 = July)
-
-  const MONTH_NAMES = [
-    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-  ];
-  const currentMonthLabel = `${MONTH_NAMES[month]} ${year}`;
-
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
-  // Weekday of 1st day of month (0 = Sun, 1 = Mon, ..., 6 = Sat)
-  const firstDayWeekday = new Date(year, month, 1).getDay();
-
-  // Convert to Monday-first grid index: Mon(1)->0, Tue(2)->1, Wed(3)->2, Thu(4)->3, Fri(5)->4, Sat(6)->5, Sun(0)->6
-  const paddingOffset = firstDayWeekday === 0 ? 6 : firstDayWeekday - 1;
-  const paddingArray = Array.from({ length: paddingOffset }, (_, i) => i);
-
   const DAY_LABELS = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
 
   return (
@@ -106,7 +125,7 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
             </div>
             <div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white">Cek Slot Pengerjaan</h3>
-              <p className="text-[10px] text-slate-400">Kapasitas {currentMonthLabel} secara real-time</p>
+              <p className="text-[10px] text-slate-400">Kapasitas {calendarData.currentMonthLabel} secara real-time</p>
             </div>
           </div>
           <button
@@ -152,7 +171,7 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-black text-slate-700 dark:text-slate-300">
-                Jadwal Studio ({currentMonthLabel})
+                Jadwal Studio ({calendarData.currentMonthLabel})
               </p>
               <div className="flex items-center gap-1.5 text-[9px] text-slate-500">
                 <span className="w-2 h-2 rounded-full bg-red-400 inline-block" /> Libur
@@ -166,17 +185,17 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
               ))}
             </div>
 
-            {/* Days grid with dynamic weekday padding */}
+            {/* Days grid with client-computed padding */}
             <div className="grid grid-cols-7 gap-1">
               {/* Empty padding cells before 1st of month */}
-              {paddingArray.map((p) => (
+              {calendarData.paddingArray.map((p) => (
                 <div key={`pad-${p}`} className="aspect-square" />
               ))}
 
               {/* Actual month days */}
-              {days.map((day) => {
+              {calendarData.days.map((day) => {
                 const isHoliday = holidays.includes(day);
-                const isToday = day === now.getDate();
+                const isToday = day === calendarData.todayDate;
                 return (
                   <div
                     key={day}

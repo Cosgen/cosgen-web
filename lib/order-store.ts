@@ -106,12 +106,20 @@ export function mergeOrders(primary: OrderData[], secondary: OrderData[]): Order
 
 // Fetch latest global orders from server API (Supabase) and merge with local
 export async function syncGlobalOrdersFromServer(): Promise<OrderData[]> {
-  const localOrders = getStoredOrders();
   try {
-    const res = await fetch("/api/orders", { cache: "no-store" });
+    const res = await fetch(`/api/orders?t=${Date.now()}`, { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       if (data.orders && Array.isArray(data.orders)) {
+        if (data.orders.length === 0) {
+          if (typeof window !== "undefined") {
+            localStorage.setItem("cosgen_admin_orders", JSON.stringify([]));
+            window.dispatchEvent(new Event("cosgen_orders_updated"));
+          }
+          return [];
+        }
+
+        const localOrders = getStoredOrders();
         const merged = mergeOrders(data.orders, localOrders);
         if (typeof window !== "undefined") {
           localStorage.setItem("cosgen_admin_orders", JSON.stringify(merged));
@@ -121,22 +129,22 @@ export async function syncGlobalOrdersFromServer(): Promise<OrderData[]> {
       }
     }
   } catch (err) {
-    console.warn("Global order sync warning:", err);
+    console.warn("Failed to sync orders from server:", err);
   }
-  return localOrders;
+  return getStoredOrders();
 }
 
 export function getStoredOrders(): OrderData[] {
   if (typeof window === "undefined") return INITIAL_SHARED_ORDERS;
-  const saved = localStorage.getItem("cosgen_admin_orders");
-  if (!saved) {
-    localStorage.setItem("cosgen_admin_orders", JSON.stringify(INITIAL_SHARED_ORDERS));
-    return INITIAL_SHARED_ORDERS;
-  }
   try {
-    return JSON.parse(saved);
-  } catch (e) {
-    console.error(e);
+    const raw = localStorage.getItem("cosgen_admin_orders");
+    if (!raw) {
+      localStorage.setItem("cosgen_admin_orders", JSON.stringify(INITIAL_SHARED_ORDERS));
+      return INITIAL_SHARED_ORDERS;
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : INITIAL_SHARED_ORDERS;
+  } catch {
     return INITIAL_SHARED_ORDERS;
   }
 }
@@ -145,6 +153,15 @@ export function saveOrdersToStorage(orders: OrderData[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem("cosgen_admin_orders", JSON.stringify(orders));
   window.dispatchEvent(new Event("cosgen_orders_updated"));
+
+  // Also sync to server API asynchronously
+  try {
+    fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "sync", orders }),
+    }).catch(() => {});
+  } catch {}
 }
 
 export async function saveNewSingleOrder(newOrder: OrderData): Promise<OrderData[]> {
