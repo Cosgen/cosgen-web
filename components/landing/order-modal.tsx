@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { CustomerStep1Form } from "./customer-step1-form";
 import { OrderStep2Form, OrderGroup } from "./order-step2-form";
 import { OrderSuccessScreen } from "./order-success-screen";
 import { TermsConditionsModal } from "./terms-conditions-modal";
 import { saveNewSingleOrder, OrderData } from "@/lib/order-store";
-import { INITIAL_PACKAGES } from "@/app/admin/item-jasa/page";
+import { INITIAL_PACKAGES, ServicePackage } from "@/app/admin/item-jasa/page";
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -25,10 +25,11 @@ export function OrderModal({
 
   // Selected package state
   const [currentPackage, setCurrentPackage] = useState(initialPackage);
+  const [packages, setPackages]             = useState<ServicePackage[]>(INITIAL_PACKAGES);
 
   // Step 1 State
-  const [nickname, setNickname] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
+  const [nickname, setNickname]   = useState("");
+  const [whatsapp, setWhatsapp]   = useState("");
   const [instagram, setInstagram] = useState("");
 
   // Step 2 State
@@ -37,10 +38,27 @@ export function OrderModal({
   ]);
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; size: string }[]>([]);
   const [customerGdriveUrl, setCustomerGdriveUrl] = useState("");
-  const [promoCode, setPromoCode] = useState("");
+  const [promoCode, setPromoCode]                 = useState("");
 
   // Generated REQ Code
   const [reqCode, setReqCode] = useState("");
+
+  // Synchronize dynamic packages from Item & Price List
+  useEffect(() => {
+    const load = () => {
+      const saved = localStorage.getItem("cosgen_pricelist_packages");
+      if (saved) {
+        try { setPackages(JSON.parse(saved)); } catch {}
+      }
+      fetch(`/api/pricelist?t=${Date.now()}`, { cache: "no-store" })
+        .then(r => r.json()).then(d => {
+          if (d.packages?.length) setPackages(d.packages);
+        }).catch(() => {});
+    };
+    load();
+    window.addEventListener("cosgen_pricelist_updated", load);
+    return () => window.removeEventListener("cosgen_pricelist_updated", load);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -56,17 +74,19 @@ export function OrderModal({
     const code = `REQ-${randomNum}`;
     setReqCode(code);
 
-    // 2. Calculate Package Price & Discounts
-    const pkgData = INITIAL_PACKAGES.find((p) => p.name === currentPackage) || INITIAL_PACKAGES[1];
+    // 2. Calculate Package Price & Discounts using live active packages from Item & Price List
+    const pkgData = packages.find((p) => p.name === currentPackage) || packages[1] || packages[0];
     const basePrice = pkgData?.price || 650000;
     const adminDiscountPct = pkgData?.discountPercent || 0;
     const isPromoApplied = promoCode.trim().toUpperCase() === "COSGENFIRST";
     const promoDiscountPct = isPromoApplied ? 15 : 0;
     const totalDiscountPct = Math.min(100, adminDiscountPct + promoDiscountPct);
     const discountAmount = Math.round(basePrice * (totalDiscountPct / 100));
-    const calculatedTotal = Math.max(0, basePrice - discountAmount);
+    const unitPrice = Math.max(0, basePrice - discountAmount);
 
     const totalPhotoCount = orderGroups.reduce((sum, g) => sum + (g.photoCount || 1), 0);
+    const calculatedTotal = unitPrice * Math.max(1, totalPhotoCount);
+
     const compiledBrief = orderGroups
       .map((g, idx) => `[Foto ${idx + 1}] Karakter: ${g.characterName || "-"}. Brief: ${g.brief || "-"}`)
       .join(" | ");
