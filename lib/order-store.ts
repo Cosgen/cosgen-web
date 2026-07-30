@@ -34,19 +34,65 @@ export interface OrderData {
 
 export const INITIAL_SHARED_ORDERS: OrderData[] = [];
 
-// Helper to merge two lists of orders cleanly without duplicates
+const STATUS_WEIGHT: Record<string, number> = {
+  "Menunggu Konfirmasi": 1,
+  "Dalam Antrian": 2,
+  "Sedang Dikerjakan": 3,
+  "Review": 4,
+  "Review Hasil": 4,
+  "Review Pelanggan": 4,
+  "Menunggu Pembayaran": 5,
+  "Selesai": 6,
+  "Ditolak": -1,
+};
+
 export function mergeOrders(primary: OrderData[], secondary: OrderData[]): OrderData[] {
   const map = new Map<string, OrderData>();
-  
-  // Add primary (server) orders first
+
+  const allKeys = new Set<string>();
   primary.forEach((o) => {
-    if (o.id) map.set(o.id, o);
+    if (o.id) allKeys.add(o.id);
+    if (o.code) allKeys.add(o.code);
+  });
+  secondary.forEach((o) => {
+    if (o.id) allKeys.add(o.id);
+    if (o.code) allKeys.add(o.code);
   });
 
-  // Add secondary (local) orders if not present
-  secondary.forEach((o) => {
-    if (o.id && !map.has(o.id)) {
-      map.set(o.id, o);
+  allKeys.forEach((key) => {
+    const p = primary.find(
+      (o) =>
+        o.id === key ||
+        o.code === key ||
+        (o.officialCode && o.officialCode === key) ||
+        (o.tempCode && o.tempCode === key)
+    );
+    const s = secondary.find(
+      (o) =>
+        o.id === key ||
+        o.code === key ||
+        (o.officialCode && o.officialCode === key) ||
+        (o.tempCode && o.tempCode === key)
+    );
+
+    const mainKey = (p && p.id) || (s && s.id) || key;
+    if (map.has(mainKey)) return;
+
+    if (p && !s) {
+      map.set(mainKey, p);
+    } else if (s && !p) {
+      map.set(mainKey, s);
+    } else if (p && s) {
+      const pW = STATUS_WEIGHT[p.status] || 0;
+      const sW = STATUS_WEIGHT[s.status] || 0;
+
+      let merged: OrderData;
+      if (sW > pW || (s.reviewStartedAt && !p.reviewStartedAt)) {
+        merged = { ...p, ...s };
+      } else {
+        merged = { ...s, ...p };
+      }
+      map.set(mainKey, merged);
     }
   });
 
