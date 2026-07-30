@@ -117,12 +117,13 @@ export function MobileBottomNav({
     <div
       className="md:hidden fixed bottom-0 left-0 right-0 z-[100]"
       style={{
-        background: "rgba(9,14,26,0.96)",
+        background: "rgba(9,14,26,0.97)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
         borderTop: "1px solid rgba(255,255,255,0.07)",
         paddingBottom: "var(--sab, 0px)",
-        /* Always visible — no scroll-hide */
+        transform: "translateZ(0)",   /* force GPU layer — never disappears */
+        willChange: "auto",
       }}
     >
       <nav

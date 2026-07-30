@@ -44,19 +44,32 @@ export function PricelistSection({ onSelectPackage }: PricelistSectionProps) {
             <h2 className="headline" style={{ fontSize: "clamp(24px,3.5vw,44px)", color: "var(--text-1)" }}>
               Pilih Paket Kamu
             </h2>
-            <p className="text-[13px] max-w-xs sm:text-right" style={{ color: "var(--text-2)", fontFamily: "'Inter',sans-serif" }}>
-              Semua paket sudah termasuk revisi dan pengiriman file resolusi penuh.
+            <p className="text-[13px] max-w-sm sm:text-right" style={{ color: "var(--text-2)", fontFamily: "'Inter',sans-serif" }}>
+              Semua paket sudah termasuk revisi 1x dan pengiriman file resolusi penuh
             </p>
           </div>
         </div>
 
-        {/* Cards — Horizontal scroll on mobile, 3-col on desktop */}
+        {/* CSS override for responsive grid */}
+        <style>{`
+          @media (max-width: 767px) {
+            #pricelist-grid { grid-template-columns: 1fr !important; }
+          }
+          @media (min-width: 768px) and (max-width: 1023px) {
+            #pricelist-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          }
+        `}</style>
+
+        {/* Cards grid */}
         <div
-          className="grid gap-4"
-          style={{ gridTemplateColumns: `repeat(${Math.min(active.length, 3)}, minmax(0, 1fr))` }}
+          id="pricelist-grid"
+          className="grid gap-6"
+          style={{
+            gridTemplateColumns: `repeat(${Math.min(active.length, 3)}, minmax(0, 1fr))`,
+          }}
         >
           {active.map((pkg) => {
-            const disc = pkg.discountPercent || 0;
+            const disc  = pkg.discountPercent || 0;
             const final = Math.round(pkg.price * (1 - disc / 100));
             const pop   = pkg.isPopular;
 
@@ -65,65 +78,45 @@ export function PricelistSection({ onSelectPackage }: PricelistSectionProps) {
                 key={pkg.id}
                 className="relative flex flex-col"
                 style={pop ? {
-                  background: "linear-gradient(160deg, var(--blue) 0%, #1d4ed8 100%)",
+                  background: "linear-gradient(160deg, #2563EB 0%, #1d4ed8 100%)",
                   borderRadius: "var(--r-xl)",
-                  boxShadow: "var(--shadow-blue-lg), 0 0 0 1px rgba(99,163,255,0.3)",
+                  boxShadow: "var(--shadow-blue-lg), 0 0 0 1px rgba(99,163,255,0.25)",
                   padding: "24px",
                 } : {
                   background: "var(--surface)",
                   border: "1px solid var(--border-md)",
                   borderRadius: "var(--r-xl)",
-                  boxShadow: "var(--shadow-sm)",
                   padding: "24px",
                 }}
               >
-                {/* Popular tag */}
                 {pop && (
-                  <span
-                    className="absolute -top-3.5 left-5 label"
-                    style={{ background: "var(--amber)", color: "#1a1a1a", border: "none", fontSize: "10px" }}
-                  >
+                  <span className="label absolute -top-3.5 left-5" style={{ background: "var(--amber)", color: "#111", border: "none" }}>
                     ✦ Paling Diminati
                   </span>
                 )}
 
-                {/* Discount */}
                 {disc > 0 && (
-                  <span
-                    className="label w-fit mb-4"
-                    style={pop
-                      ? { background: "rgba(255,255,255,0.18)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }
-                      : { background: "var(--coral-dim)", color: "var(--coral)", border: "none" }
-                    }
-                  >
+                  <span className="label w-fit mb-4" style={pop
+                    ? { background: "rgba(255,255,255,0.18)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }
+                    : { background: "var(--coral-dim)", color: "var(--coral)", border: "none" }
+                  }>
                     -{disc}% DISKON
                   </span>
                 )}
 
-                {/* Package name */}
                 <div className="mb-5">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-1" style={{ color: pop ? "rgba(255,255,255,0.55)" : "var(--text-3)", fontFamily: "'Inter',sans-serif" }}>
-                    Paket
-                  </p>
-                  <h3 className="headline text-xl" style={{ color: pop ? "#fff" : "var(--text-1)" }}>
-                    {pkg.name}
-                  </h3>
-                  <p className="text-[12px] mt-1.5 leading-relaxed" style={{ color: pop ? "rgba(255,255,255,0.6)" : "var(--text-2)", fontFamily: "'Inter',sans-serif" }}>
-                    {pkg.description}
-                  </p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-1" style={{ color: pop ? "rgba(255,255,255,0.5)" : "var(--text-3)", fontFamily: "'Inter',sans-serif" }}>Paket</p>
+                  <h3 className="headline text-xl" style={{ color: pop ? "#fff" : "var(--text-1)" }}>{pkg.name}</h3>
+                  <p className="text-[12px] mt-1.5 leading-relaxed" style={{ color: pop ? "rgba(255,255,255,0.6)" : "var(--text-2)", fontFamily: "'Inter',sans-serif" }}>{pkg.description}</p>
                 </div>
 
-                {/* Price */}
-                <div
-                  className="pb-5 mb-5"
-                  style={{ borderBottom: `1px solid ${pop ? "rgba(255,255,255,0.15)" : "var(--border)"}` }}
-                >
+                <div className="pb-5 mb-5" style={{ borderBottom: `1px solid ${pop ? "rgba(255,255,255,0.15)" : "var(--border)"}` }}>
                   {disc > 0 && (
                     <p className="text-[11px] line-through mb-0.5" style={{ color: pop ? "rgba(255,255,255,0.4)" : "var(--text-4)", fontFamily: "monospace" }}>
                       Rp {pkg.price.toLocaleString("id-ID")}
                     </p>
                   )}
-                  <div className="headline text-3xl" style={{ color: pop ? "#fff" : "var(--text-1)" }}>
+                  <div className="headline text-3xl font-bold" style={{ color: pop ? "#fff" : "var(--text-1)" }}>
                     Rp {final.toLocaleString("id-ID")}
                   </div>
                   <p className="text-[11px] font-semibold mt-1" style={{ color: pop ? "rgba(255,255,255,0.65)" : "var(--blue)", fontFamily: "'Inter',sans-serif" }}>
@@ -131,45 +124,29 @@ export function PricelistSection({ onSelectPackage }: PricelistSectionProps) {
                   </p>
                 </div>
 
-                {/* Features */}
                 <ul className="flex-1 space-y-2.5 mb-6">
                   {pkg.features.map((f, i) => (
                     <li key={i} className="flex items-start gap-2.5">
-                      <span
-                        className="w-4 h-4 rounded flex items-center justify-center shrink-0 mt-0.5"
-                        style={pop
-                          ? { background: "rgba(255,255,255,0.2)" }
-                          : { background: "var(--blue-dim)", border: "1px solid var(--blue-border)" }
-                        }
-                      >
+                      <span className="w-4 h-4 rounded flex items-center justify-center shrink-0 mt-0.5"
+                        style={pop ? { background: "rgba(255,255,255,0.2)" } : { background: "var(--blue-dim)", border: "1px solid var(--blue-border)" }}>
                         <Check className="w-2.5 h-2.5" style={{ color: pop ? "#fff" : "var(--blue)" }} />
                       </span>
-                      <span className="text-[12px] leading-snug" style={{ color: pop ? "rgba(255,255,255,0.75)" : "var(--text-2)", fontFamily: "'Inter',sans-serif" }}>
-                        {f}
-                      </span>
+                      <span className="text-[12px] leading-snug" style={{ color: pop ? "rgba(255,255,255,0.75)" : "var(--text-2)", fontFamily: "'Inter',sans-serif" }}>{f}</span>
                     </li>
                   ))}
                 </ul>
 
-                {/* CTA */}
                 <button
                   type="button"
                   onClick={() => onSelectPackage?.(pkg.name)}
                   className="w-full btn"
                   style={pop ? {
-                    background: "#fff",
-                    color: "var(--blue-dark)",
-                    borderRadius: "var(--r-md)",
-                    fontFamily: "'Inter',sans-serif",
-                    boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
-                    minHeight: "44px",
+                    background: "#fff", color: "var(--blue-dark)",
+                    borderRadius: "var(--r-md)", fontFamily: "'Inter',sans-serif", minHeight: "44px",
                   } : {
-                    background: "var(--blue)",
-                    color: "#fff",
-                    borderRadius: "var(--r-md)",
-                    fontFamily: "'Inter',sans-serif",
-                    boxShadow: "var(--shadow-blue)",
-                    minHeight: "44px",
+                    background: "var(--blue)", color: "#fff",
+                    borderRadius: "var(--r-md)", fontFamily: "'Inter',sans-serif",
+                    boxShadow: "var(--shadow-blue)", minHeight: "44px",
                   }}
                 >
                   Pesan {pkg.name}
@@ -179,9 +156,9 @@ export function PricelistSection({ onSelectPackage }: PricelistSectionProps) {
           })}
         </div>
 
-        {/* Note */}
+        {/* Footer note */}
         <p className="text-center text-[12px] mt-8" style={{ color: "var(--text-3)", fontFamily: "'Inter',sans-serif" }}>
-          Harga belum termasuk rush order. Pembayaran setelah ACC & bisa dicicil. Estimasi ±3 hari kerja.
+          Estimasi ±3 hari kerja, mengikuti antrian. Pembayaran setelah ACC.
         </p>
       </div>
     </section>

@@ -1,18 +1,32 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Maximize2, X } from "lucide-react";
+import { X } from "lucide-react";
 
 export interface PortfolioItem {
   id: string;
   title: string;
   category: "Regular" | "Background Premium";
   imageUrl: string;
-  aspectRatio?: "portrait" | "landscape"; // kept for backward compat
+  aspectRatio?: "portrait" | "landscape";
 }
 
+// Default real CosGen images — shown when no admin content yet
+const DEFAULT_ITEMS: PortfolioItem[] = [
+  { id: "d1", title: "Cosplay VFX Sinematik",           category: "Regular",             imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785183996/Pic_2_sbrbuc.jpg" },
+  { id: "d2", title: "Background Premium — Cinematic",  category: "Background Premium",  imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785188133/Pic_1_Aemeath_a6tnw8.jpg" },
+  { id: "d3", title: "Full CGI Edit",                   category: "Regular",             imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414586/Final_oa3n4x.jpg" },
+  { id: "d4", title: "Clean Visual Edit",               category: "Regular",             imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414651/Final_Clean_m20ri7.jpg" },
+  { id: "d5", title: "Portrait Retouch",                category: "Regular",             imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414847/david_szbhpi.png" },
+  { id: "d6", title: "VFX Compositing",                 category: "Background Premium",  imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414987/Edit_wfui7l.png" },
+  { id: "d7", title: "Cosplay CGI Final",               category: "Regular",             imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415103/Final_rqbqbj.jpg" },
+  { id: "d8", title: "Scene Render Final",              category: "Background Premium",  imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415206/Final_nsc3k5.jpg" },
+  { id: "d9", title: "Before-After Compare",            category: "Regular",             imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415274/Final_2_Compare_csw7vk.jpg" },
+  { id: "d10", title: "Final Edit Master",              category: "Background Premium",  imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415340/Final_01_e3s5sw.jpg" },
+];
+
 const getInitialPortfolio = (): PortfolioItem[] => {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") return DEFAULT_ITEMS;
   try {
     const c = JSON.parse(localStorage.getItem("cosgen_site_content") || "null");
     if (c?.portfolio?.length) return c.portfolio.map((p: any, i: number) => ({
@@ -21,13 +35,13 @@ const getInitialPortfolio = (): PortfolioItem[] => {
       imageUrl: p.image || p.imageUrl || "",
     }));
   } catch {}
-  return [];
+  return DEFAULT_ITEMS;
 };
 
 export function PortfolioSection() {
-  const [mounted, setMounted] = useState(false);
-  const [items, setItems] = useState<PortfolioItem[]>(getInitialPortfolio);
-  const [filter, setFilter] = useState<"Semua" | "Regular" | "Background Premium">("Semua");
+  const [mounted,  setMounted]  = useState(false);
+  const [items,    setItems]    = useState<PortfolioItem[]>(getInitialPortfolio);
+  const [filter,   setFilter]   = useState<"Semua" | "Regular" | "Background Premium">("Semua");
   const [lightbox, setLightbox] = useState<PortfolioItem | null>(null);
 
   useEffect(() => {
@@ -36,12 +50,11 @@ export function PortfolioSection() {
       fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
         .then(r => r.json()).then(d => {
           if (d.content?.portfolio?.length) {
-            const mapped: PortfolioItem[] = d.content.portfolio.map((p: any, i: number) => ({
+            setItems(d.content.portfolio.map((p: any, i: number) => ({
               id: p.id || `p-${i}`, title: p.title,
               category: p.category === "Background Premium" ? "Background Premium" : "Regular",
               imageUrl: p.image || p.imageUrl || "",
-            }));
-            setItems(mapped);
+            })));
             try { localStorage.setItem("cosgen_site_content", JSON.stringify(d.content)); } catch {}
           }
         }).catch(() => {});
@@ -54,11 +67,25 @@ export function PortfolioSection() {
 
   const filtered = filter === "Semua" ? items : items.filter(p => p.category === filter);
 
+  // Bento grid spans — cycles through layout pattern
+  const bentoSpans = [
+    "col-span-2 row-span-2",  // big
+    "col-span-1 row-span-1",  // sm
+    "col-span-1 row-span-2",  // tall
+    "col-span-1 row-span-1",  // sm
+    "col-span-1 row-span-1",  // sm
+    "col-span-2 row-span-1",  // wide
+    "col-span-1 row-span-1",  // sm
+    "col-span-1 row-span-1",  // sm
+    "col-span-1 row-span-1",  // sm
+    "col-span-1 row-span-1",  // sm
+  ];
+
   return (
     <section id="portfolio" className="section" style={{ background: "var(--bg-1)" }}>
       <div className="container">
 
-        {/* ── Header row ─────────────────────────────────────── */}
+        {/* Header row */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-10">
           <div>
             <div className="section-tag mb-3">
@@ -72,8 +99,6 @@ export function PortfolioSection() {
               Karya Terbaik
             </h2>
           </div>
-
-          {/* Filter */}
           <div className="flex gap-2 flex-wrap">
             {(["Semua", "Regular", "Background Premium"] as const).map(cat => (
               <button
@@ -92,71 +117,100 @@ export function PortfolioSection() {
           </div>
         </div>
 
-        {/* ── Grid ───────────────────────────────────────────── */}
-        {!mounted || filtered.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-[14px]" style={{ color: "var(--text-3)" }}>
-              {!mounted ? "Memuat karya..." : "Belum ada karya — tambahkan dari admin panel."}
-            </p>
-          </div>
+        {/* ── BENTO GRID (desktop 4-col, tablet 2-col, mobile 2-col) ── */}
+        {filtered.length === 0 ? (
+          <p className="text-center py-20 text-[14px]" style={{ color: "var(--text-3)" }}>
+            Belum ada karya — tambahkan dari admin panel.
+          </p>
         ) : (
-          <div
-            className="grid gap-3"
-            style={{
-              gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 240px), 1fr))",
-              opacity: mounted ? 1 : 0,
-              transition: "opacity 0.3s ease",
-            }}
-          >
-            {filtered.map((item, idx) => (
-              <div
-                key={item.id}
-                className="group relative overflow-hidden cursor-pointer"
-                style={{
-                  borderRadius: "var(--r-xl)",
-                  aspectRatio: idx % 3 === 0 ? "3/4" : idx % 3 === 1 ? "1/1" : "4/3",
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  transition: "transform 200ms ease, box-shadow 200ms ease",
-                }}
-                onClick={() => setLightbox(item)}
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "scale(1.02)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "var(--shadow-lg)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = "scale(1)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; }}
-              >
-                <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                {/* Overlay */}
-                <div
-                  className="absolute inset-0 flex flex-col justify-end p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                  style={{ background: "linear-gradient(to top, rgba(5,10,20,0.9) 0%, transparent 60%)" }}
-                >
-                  <span
-                    className="label mb-1 w-fit"
-                    style={item.category === "Background Premium"
-                      ? { background: "rgba(251,191,36,0.15)", color: "#FBBF24", border: "1px solid rgba(251,191,36,0.25)" }
-                      : { background: "var(--blue-dim)", color: "var(--blue)", border: "1px solid var(--blue-border)" }
-                    }
+          <>
+            {/* Desktop bento — hidden on mobile */}
+            <div
+              className="hidden md:grid gap-3"
+              style={{
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gridAutoRows: "180px",
+                opacity: mounted ? 1 : 0,
+                transition: "opacity 0.3s ease",
+              }}
+            >
+              {filtered.map((item, idx) => {
+                const span = bentoSpans[idx % bentoSpans.length];
+                return (
+                  <div
+                    key={item.id}
+                    className={`${span} group relative overflow-hidden cursor-pointer`}
+                    style={{
+                      borderRadius: "var(--r-xl)",
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                    }}
+                    onClick={() => setLightbox(item)}
                   >
-                    {item.category === "Background Premium" ? "Premium" : "Regular"}
-                  </span>
-                  <p className="text-white font-semibold text-[12px] leading-snug">{item.title}</p>
-                </div>
-                {/* Expand */}
-                <button
-                  type="button"
-                  aria-label="Perbesar"
-                  className="absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 transition-all text-white"
-                  style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)", borderRadius: "var(--r-sm)" }}
-                  onClick={e => { e.stopPropagation(); setLightbox(item); }}
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                    />
+                    <div
+                      className="absolute inset-0 flex flex-col justify-end p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      style={{ background: "linear-gradient(to top, rgba(5,10,20,0.88) 0%, transparent 55%)" }}
+                    >
+                      <span
+                        className="label w-fit mb-1"
+                        style={item.category === "Background Premium"
+                          ? { background: "rgba(251,191,36,.15)", color: "#FBBF24", border: "1px solid rgba(251,191,36,.25)" }
+                          : { background: "var(--blue-dim)", color: "var(--blue)", border: "1px solid var(--blue-border)" }
+                        }
+                      >
+                        {item.category === "Background Premium" ? "Premium" : "Regular"}
+                      </span>
+                      <p className="text-white font-semibold text-[12px] leading-snug">{item.title}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Mobile grid — 2 col, uniform */}
+            <div
+              className="grid md:hidden gap-2.5"
+              style={{
+                gridTemplateColumns: "repeat(2, 1fr)",
+                opacity: mounted ? 1 : 0,
+                transition: "opacity 0.3s ease",
+              }}
+            >
+              {filtered.map((item, idx) => (
+                <div
+                  key={item.id}
+                  className="relative overflow-hidden cursor-pointer"
+                  style={{
+                    aspectRatio: "1/1",
+                    borderRadius: "var(--r-lg)",
+                    background: "var(--surface)",
+                  }}
+                  onClick={() => setLightbox(item)}
                 >
-                  <Maximize2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div
+                    className="absolute inset-x-0 bottom-0 p-2"
+                    style={{ background: "linear-gradient(to top, rgba(5,10,20,0.8), transparent)" }}
+                  >
+                    <p className="text-white text-[10px] font-semibold leading-snug">{item.title}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
-      {/* ── Lightbox ───────────────────────────────────────── */}
+      {/* Lightbox */}
       {lightbox && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center p-4"
