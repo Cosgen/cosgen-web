@@ -2,62 +2,73 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 
-const NAV_LINKS = [
-  { href: "/#portfolio", label: "Portofolio" },
-  { href: "/portfolio", label: "Galeri Lengkap" },
-  { href: "/#compare", label: "Compare" },
-  { href: "/#pricelist", label: "Paket" },
-  { href: "/#faq", label: "FAQ" },
-  { href: "/cek-status", label: "Cek Status" },
+const WHITE_LOGO = "https://res.cloudinary.com/or0nvx0c/image/upload/v1785184391/Logo_Putih_01_xozs8n.png";
+
+const LINKS = [
+  { href: "#portfolio", label: "Portofolio" },
+  { href: "#pricelist", label: "Paket & Harga" },
+  { href: "#faq",       label: "FAQ" },
+  { href: "/cek-status", label: "Cek Status Pesanan", external: true },
 ];
 
 export function LandingFooter() {
+  const nav = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (!href.startsWith("#")) return;
+    e.preventDefault();
+    document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+    history.replaceState(null, "", href);
+  };
+
   return (
-    <footer className="bg-slate-950 text-white border-t border-slate-800/60 font-sans">
-      {/* Main content */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 items-start">
+    <footer
+      className="page-wrap md:pb-0"
+      style={{ background: "#070c16", borderTop: "1px solid rgba(255,255,255,0.05)" }}
+    >
+      {/* Top section */}
+      <div className="container pt-12 pb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
+
           {/* Brand */}
-          <div className="space-y-3">
-            <img
-              src="https://res.cloudinary.com/or0nvx0c/image/upload/v1785184391/Logo_Putih_01_xozs8n.png"
-              alt="CosGen.id"
-              className="h-8 w-auto object-contain"
-            />
-            <p className="text-[12px] text-slate-400 leading-relaxed max-w-sm">
-              Platform pemesanan jasa edit foto cosplay dengan visual CGI & VFX tingkat sinematik.
+          <div className="md:col-span-2">
+            <img src={WHITE_LOGO} alt="CosGen.id" className="h-7 w-auto mb-4" />
+            <p className="text-[13px] leading-relaxed max-w-sm mb-5" style={{ color: "#3d4f6b", fontFamily: "'Inter',sans-serif" }}>
+              Platform pemesanan jasa edit foto cosplay dengan visual CGI &amp; VFX sinematik. Hasil premium, proses transparan.
             </p>
-            <div className="flex items-center gap-2 pt-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] text-emerald-400 font-bold">Studio Online — Siap Menerima Pesanan</span>
+            <div className="flex items-center gap-2">
+              <span className="pulse-dot w-2 h-2 rounded-full flex-shrink-0" style={{ background: "#34D399" }} />
+              <span className="text-[12px] font-semibold" style={{ color: "#34D399", fontFamily: "'Inter',sans-serif" }}>
+                Siap Menerima Pesanan
+              </span>
             </div>
           </div>
 
-          {/* Navigation */}
-          <div className="space-y-3 md:justify-self-end">
-            <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.15em]">Navigasi Utama</h4>
-            <ul className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              {NAV_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-[12px] text-slate-400 hover:text-white transition-colors flex items-center gap-1 group font-medium"
-                  >
-                    {link.label}
-                    <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </Link>
+          {/* Links */}
+          <div>
+            <h4 className="text-[10px] font-bold uppercase tracking-[0.18em] mb-4" style={{ color: "#2a3a52", fontFamily: "'Inter',sans-serif" }}>
+              Navigasi
+            </h4>
+            <ul className="space-y-2.5">
+              {LINKS.map(l => (
+                <li key={l.href}>
+                  {l.external
+                    ? <Link href={l.href} className="text-[13px] font-medium transition-colors hover:text-white" style={{ color: "#3d4f6b", fontFamily: "'Inter',sans-serif" }}>{l.label}</Link>
+                    : <a href={l.href} onClick={e => nav(e as React.MouseEvent<HTMLAnchorElement>, l.href)} className="text-[13px] font-medium transition-colors hover:text-white" style={{ color: "#3d4f6b", fontFamily: "'Inter',sans-serif" }}>{l.label}</a>
+                  }
                 </li>
               ))}
             </ul>
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="pt-6 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-slate-600">
-          <p>© {new Date().getFullYear()} CosGen.id Platform — Hak Cipta Dilindungi.</p>
-          <p className="text-slate-700">Made with ♥ for Cosplay Community</p>
+        {/* Divider + bottom */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-6" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+          <p className="text-[11px]" style={{ color: "#243040", fontFamily: "'Inter',sans-serif" }}>
+            © {new Date().getFullYear()} CosGen.id — Hak Cipta Dilindungi.
+          </p>
+          <p className="text-[11px]" style={{ color: "#243040", fontFamily: "'Inter',sans-serif" }}>
+            Made with ♥ for the Cosplay Community
+          </p>
         </div>
       </div>
     </footer>

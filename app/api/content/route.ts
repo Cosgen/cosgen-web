@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 export interface HeroContent {
   headline: string;
   subheadline: string;
+  description?: string;
   ctaText?: string;
   fontFamily?: string;
 }
@@ -29,60 +30,49 @@ export interface SiteContentData {
   portfolio: PortfolioItem[];
 }
 
+export const OFFICIAL_10_PORTFOLIO: PortfolioItem[] = [
+  { id: "p1",  title: "Cosplay 01", category: "Regular",            image: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785183996/Pic_2_sbrbuc.jpg" },
+  { id: "p2",  title: "Cosplay 02", category: "Background Premium", image: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785188133/Pic_1_Aemeath_a6tnw8.jpg" },
+  { id: "p3",  title: "Cosplay 03", category: "Regular",            image: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414586/Final_oa3n4x.jpg" },
+  { id: "p4",  title: "Cosplay 04", category: "Regular",            image: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414651/Final_Clean_m20ri7.jpg" },
+  { id: "p5",  title: "Cosplay 05", category: "Regular",            image: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414847/david_szbhpi.png" },
+  { id: "p6",  title: "Cosplay 06", category: "Background Premium", image: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414987/Edit_wfui7l.png" },
+  { id: "p7",  title: "Cosplay 07", category: "Regular",            image: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415103/Final_rqbqbj.jpg" },
+  { id: "p8",  title: "Cosplay 08", category: "Background Premium", image: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415206/Final_nsc3k5.jpg" },
+  { id: "p9",  title: "Cosplay 09", category: "Regular",            image: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415274/Final_2_Compare_csw7vk.jpg" },
+  { id: "p10", title: "Cosplay 10", category: "Background Premium", image: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415340/Final_01_e3s5sw.jpg" },
+];
+
 export const DEFAULT_SITE_CONTENT: SiteContentData = {
   hero: {
-    headline: "Ubah Foto Cosplay & Karya Kreatif Jadi Mahakarya Epik",
-    subheadline: "Layanan editing visual profesional untuk Cosplay, Generasi AI, & Background Premium dengan sistem alur pemesanan transparan.",
-    ctaText: "Pesan Jasa Edit Sekarang",
+    headline: "Platform Interaktif",
+    subheadline: "CosplayGenerative",
+    description: "Transformasi foto cosplay dengan background premium serta sistem pemesanan yang jelas untuk memastikan setiap proses dapat dipantau dengan mudah.",
+    ctaText: "Pesan Sekarang",
   },
   faqs: [
     {
       id: "f1",
       question: "Berapa lama estimasi pengerjaan foto cosplay saya?",
-      answer: "Estimasi pengerjaan ±3 hari kerja efektif setelah disetujui Admin. Mengikuti antrian, tidak dijamin.",
+      answer: "Estimasi pengerjaan ±3 hari kerja efektif setelah disetujui Admin. Mengikuti antrian.",
     },
     {
       id: "f2",
       question: "Bagaimana alur pembayaran pesanan?",
-      answer: "Pembayaran dilakukan via Midtrans Snap (QRIS, VA, E-wallet) setelah Admin melakukan ulasan awal & ACC pesanan kamu.",
+      answer: "Pembayaran dilakukan via Midtrans Snap (QRIS, VA, E-wallet) setelah Admin melakukan ACC pesanan kamu.",
     },
     {
       id: "f3",
       question: "Berapa kali batas revisi yang diberikan?",
-      answer: "Batas revisi disesuaikan dengan paket yang dipilih (Pertalite Max 1x, Pertamax Max 2x, Pertamax Turbo Unlimited). Setiap sesi review diberikan batas waktu 4x24 jam.",
+      answer: "Setiap paket sudah termasuk 1x revisi dan pengiriman file resolusi penuh.",
     },
     {
       id: "f4",
       question: "Bagaimana cara pengiriman file foto mentah?",
-      answer: "Kamu cukup memberikan 1 link Google Drive berisi foto mentah yang akan diedit + foto referensi pada formulir order.",
+      answer: "Kamu cukup memberikan 1 link Google Drive berisi foto mentah yang akan diedit pada formulir order.",
     },
   ],
-  portfolio: [
-    {
-      id: "p1",
-      title: "Cyberpunk Cyber-Samurai Cosplay",
-      category: "Background Premium",
-      image: "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800",
-      beforeImage: "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800",
-      afterImage: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800",
-    },
-    {
-      id: "p2",
-      title: "Gothic Anime Alchemist",
-      category: "Portrait",
-      image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800",
-      beforeImage: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800",
-      afterImage: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800",
-    },
-    {
-      id: "p3",
-      title: "Fantasy Dragon Realm",
-      category: "Background Premium",
-      image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800",
-      beforeImage: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800",
-      afterImage: "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800",
-    },
-  ],
+  portfolio: OFFICIAL_10_PORTFOLIO,
 };
 
 let globalServerContent: SiteContentData = DEFAULT_SITE_CONTENT;
@@ -109,10 +99,15 @@ export async function GET() {
         try {
           const parsed = JSON.parse(configRow.brief_text);
           if (parsed && (parsed.hero || parsed.faqs || parsed.portfolio)) {
+            // Filter out old unsplash images
+            const filteredPortfolio = Array.isArray(parsed.portfolio)
+              ? parsed.portfolio.filter((p: any) => p.image && p.image.includes("cloudinary.com"))
+              : [];
+
             globalServerContent = {
               hero: { ...DEFAULT_SITE_CONTENT.hero, ...parsed.hero },
-              faqs: Array.isArray(parsed.faqs) ? parsed.faqs : DEFAULT_SITE_CONTENT.faqs,
-              portfolio: Array.isArray(parsed.portfolio) ? parsed.portfolio : DEFAULT_SITE_CONTENT.portfolio,
+              faqs: Array.isArray(parsed.faqs) && parsed.faqs.length ? parsed.faqs : DEFAULT_SITE_CONTENT.faqs,
+              portfolio: filteredPortfolio.length ? filteredPortfolio : OFFICIAL_10_PORTFOLIO,
             };
             return NextResponse.json({ content: globalServerContent, source: "supabase_kv" });
           }

@@ -1,153 +1,100 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import { Maximize2, X, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 export interface PortfolioItem {
   id: string;
   title: string;
   category: "Regular" | "Background Premium";
   imageUrl: string;
-  aspectRatio: "portrait" | "landscape";
+  aspectRatio?: "portrait" | "landscape";
 }
 
-const PORTFOLIO_ITEMS: PortfolioItem[] = [
-  {
-    id: "p-1",
-    title: "Genshin Impact — Raiden Shogun",
-    category: "Regular",
-    imageUrl: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&auto=format&fit=crop&q=80",
-    aspectRatio: "portrait",
-  },
-  {
-    id: "p-2",
-    title: "Neon Cyberpunk Temple",
-    category: "Background Premium",
-    imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&auto=format&fit=crop&q=80",
-    aspectRatio: "landscape",
-  },
-  {
-    id: "p-3",
-    title: "Honkai Star Rail — Kafka VFX",
-    category: "Regular",
-    imageUrl: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&auto=format&fit=crop&q=80",
-    aspectRatio: "portrait",
-  },
-  {
-    id: "p-4",
-    title: "Sacred Sakura Shrine",
-    category: "Background Premium",
-    imageUrl: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80",
-    aspectRatio: "landscape",
-  },
-  {
-    id: "p-5",
-    title: "Fate/Stay Night — Saber Excalibur",
-    category: "Regular",
-    imageUrl: "https://images.unsplash.com/photo-1563089145-599997674d42?w=800&auto=format&fit=crop&q=80",
-    aspectRatio: "portrait",
-  },
-  {
-    id: "p-6",
-    title: "Celestial Space Galaxy",
-    category: "Background Premium",
-    imageUrl: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?w=800&auto=format&fit=crop&q=80",
-    aspectRatio: "landscape",
-  },
+// 10 Official CosGen Cloudinary Portfolio Images with "Cosplay 01" ... "Cosplay 10"
+export const OFFICIAL_10_PORTFOLIO: PortfolioItem[] = [
+  { id: "p1",  title: "Cosplay 01", category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785183996/Pic_2_sbrbuc.jpg" },
+  { id: "p2",  title: "Cosplay 02", category: "Background Premium", imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785188133/Pic_1_Aemeath_a6tnw8.jpg" },
+  { id: "p3",  title: "Cosplay 03", category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414586/Final_oa3n4x.jpg" },
+  { id: "p4",  title: "Cosplay 04", category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414651/Final_Clean_m20ri7.jpg" },
+  { id: "p5",  title: "Cosplay 05", category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414847/david_szbhpi.png" },
+  { id: "p6",  title: "Cosplay 06", category: "Background Premium", imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785414987/Edit_wfui7l.png" },
+  { id: "p7",  title: "Cosplay 07", category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415103/Final_rqbqbj.jpg" },
+  { id: "p8",  title: "Cosplay 08", category: "Background Premium", imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415206/Final_nsc3k5.jpg" },
+  { id: "p9",  title: "Cosplay 09", category: "Regular",            imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415274/Final_2_Compare_csw7vk.jpg" },
+  { id: "p10", title: "Cosplay 10", category: "Background Premium", imageUrl: "https://res.cloudinary.com/or0nvx0c/image/upload/v1785415340/Final_01_e3s5sw.jpg" },
 ];
 
-const getInitialPortfolioState = () => {
-  if (typeof window !== "undefined") {
-    try {
-      const cached = localStorage.getItem("cosgen_site_content");
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed?.portfolio && Array.isArray(parsed.portfolio)) {
-          return parsed.portfolio.map((p: any, idx: number) => ({
-            id: p.id || `p-${idx}`,
-            title: p.title,
-            category: p.category === "Background Premium" ? "Background Premium" : "Regular",
-            imageUrl: p.image || p.imageUrl || "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&auto=format&fit=crop&q=80",
-            aspectRatio: idx % 2 === 0 ? "portrait" : "landscape",
-          }));
-        }
-      }
-    } catch (e) {}
-  }
-  return [];
-};
+const ITEMS_PER_PAGE = 6;
 
 export function PortfolioSection() {
-  const [isMounted, setIsMounted] = useState(false);
-  const [items, setItems] = useState<PortfolioItem[]>(() => getInitialPortfolioState());
-  const [selectedImage, setSelectedImage] = useState<PortfolioItem | null>(null);
-  const [filter, setFilter] = useState<"Semua" | "Regular" | "Background Premium">("Semua");
+  const [mounted,     setMounted]     = useState(false);
+  const [filter,      setFilter]      = useState<"Semua" | "Regular" | "Background Premium">("Semua");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lightbox,    setLightbox]    = useState<PortfolioItem | null>(null);
 
   useEffect(() => {
-    setIsMounted(true);
-    const loadContent = () => {
-      fetch(`/api/content?t=${Date.now()}`, { cache: "no-store" })
-        .then((r) => r.json())
-        .then((d) => {
-          if (d.content && Array.isArray(d.content.portfolio)) {
-            const mapped: PortfolioItem[] = d.content.portfolio.map((p: any, idx: number) => ({
-              id: p.id || `p-${idx}`,
-              title: p.title,
-              category: p.category === "Background Premium" ? "Background Premium" : "Regular",
-              imageUrl: p.image || p.imageUrl || "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&auto=format&fit=crop&q=80",
-              aspectRatio: idx % 2 === 0 ? "portrait" : "landscape",
-            }));
-            setItems(mapped);
-            try {
-              localStorage.setItem("cosgen_site_content", JSON.stringify(d.content));
-            } catch (e) {}
-          }
-        })
-        .catch(() => {});
-    };
-    loadContent();
-    window.addEventListener("cosgen_content_updated", loadContent);
-    window.addEventListener("storage", loadContent);
-    return () => {
-      window.removeEventListener("cosgen_content_updated", loadContent);
-      window.removeEventListener("storage", loadContent);
-    };
+    setMounted(true);
   }, []);
 
-  const filtered =
-    filter === "Semua" ? items : items.filter((p) => p.category === filter);
+  const items = OFFICIAL_10_PORTFOLIO;
+
+  // Filter items
+  const filtered = filter === "Semua" ? items : items.filter(p => p.category === filter);
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
+  const safePage   = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * ITEMS_PER_PAGE;
+  const pageItems  = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Reset to page 1 when filter changes
+  const handleFilterChange = (cat: "Semua" | "Regular" | "Background Premium") => {
+    setFilter(cat);
+    setCurrentPage(1);
+  };
+
+  // Bento spans for 6-card grid
+  const bentoSpans = [
+    "col-span-2 row-span-2", // 0: Big highlight
+    "col-span-1 row-span-1", // 1: Standard
+    "col-span-1 row-span-2", // 2: Tall
+    "col-span-1 row-span-1", // 3: Standard
+    "col-span-2 row-span-1", // 4: Wide
+    "col-span-1 row-span-1", // 5: Standard
+  ];
 
   return (
-    <section id="portfolio" className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 transition-colors">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        {/* Heading row */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+    <section id="portfolio" className="section" style={{ background: "var(--bg-1)" }}>
+      <div className="container">
+
+        {/* ── Header row ─────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-8">
           <div>
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.18em] mb-2">
-              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="section-tag mb-3">
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
               </svg>
               Portofolio
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-              See All Works
+            </div>
+            <h2 className="headline" style={{ fontSize: "clamp(24px,3.5vw,44px)", color: "var(--text-1)" }}>
+              Karya Terbaik
             </h2>
           </div>
 
-          {/* Filter pills */}
-          <div className="flex items-center gap-2">
-            {(["Semua", "Regular", "Background Premium"] as const).map((cat) => (
+          {/* Category Filter */}
+          <div className="flex gap-2 flex-wrap">
+            {(["Semua", "Regular", "Background Premium"] as const).map(cat => (
               <button
                 key={cat}
                 type="button"
-                onClick={() => setFilter(cat)}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${
-                  filter === cat
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                    : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600"
-                }`}
+                onClick={() => handleFilterChange(cat)}
+                className="btn btn-sm"
+                style={filter === cat
+                  ? { background: "var(--blue-dim)", color: "var(--blue)", border: "1px solid var(--blue-border)" }
+                  : { background: "var(--surface)", color: "var(--text-2)", border: "1px solid var(--border)" }
+                }
               >
                 {cat}
               </button>
@@ -155,72 +102,171 @@ export function PortfolioSection() {
           </div>
         </div>
 
-        {/* Masonry Grid */}
-        <div className={`columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4 transition-opacity duration-150 ${isMounted ? "opacity-100" : "opacity-0"}`}>
-          {filtered.map((item) => (
+        {/* ── BENTO GRID ──────────────────────────────────────── */}
+        {filtered.length === 0 ? (
+          <p className="text-center py-20 text-[14px]" style={{ color: "var(--text-3)" }}>
+            Belum ada karya untuk kategori ini.
+          </p>
+        ) : (
+          <>
+            {/* Desktop Bento Grid (4-column layout with varied spans) */}
             <div
-              key={item.id}
-              className="break-inside-avoid group relative rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-              onClick={() => setSelectedImage(item)}
+              className="hidden md:grid gap-3 mb-8"
+              style={{
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gridAutoRows: "190px",
+                opacity: mounted ? 1 : 0,
+                transition: "opacity 0.3s ease",
+              }}
             >
-              <img
-                src={item.imageUrl}
-                alt={item.title}
-                className="w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4">
-                <span className={`text-[9px] font-black uppercase tracking-widest mb-1 ${
-                  item.category === "Background Premium" ? "text-amber-400" : "text-blue-400"
-                }`}>
-                  {item.category}
-                </span>
-                <p className="text-white text-[12px] font-bold leading-tight">{item.title}</p>
-              </div>
-              {/* Category badge */}
-              <span className={`absolute top-3 left-3 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide ${
-                item.category === "Background Premium"
-                  ? "bg-amber-400/90 text-slate-900"
-                  : "bg-blue-600/90 text-white"
-              }`}>
-                {item.category === "Background Premium" ? "Premium" : "Regular"}
-              </span>
-              {/* Expand button */}
-              <button
-                type="button"
-                className="absolute top-3 right-3 p-1.5 bg-slate-900/60 backdrop-blur-sm rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-slate-900"
-                onClick={(e) => { e.stopPropagation(); setSelectedImage(item); }}
-              >
-                <Maximize2 className="w-3.5 h-3.5" />
-              </button>
+              {pageItems.map((item, idx) => {
+                const span = bentoSpans[idx % bentoSpans.length];
+                return (
+                  <div
+                    key={item.id}
+                    className={`${span} group relative overflow-hidden cursor-pointer`}
+                    style={{
+                      borderRadius: "var(--r-xl)",
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                    }}
+                    onClick={() => setLightbox(item)}
+                  >
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                    />
+                    <div
+                      className="absolute inset-0 flex flex-col justify-end p-3.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      style={{ background: "linear-gradient(to top, rgba(5,10,20,0.88) 0%, transparent 55%)" }}
+                    >
+                      <span
+                        className="label w-fit mb-1.5"
+                        style={item.category === "Background Premium"
+                          ? { background: "rgba(251,191,36,.15)", color: "#FBBF24", border: "1px solid rgba(251,191,36,.25)" }
+                          : { background: "var(--blue-dim)", color: "var(--blue)", border: "1px solid var(--blue-border)" }
+                        }
+                      >
+                        {item.category === "Background Premium" ? "Premium" : "Regular"}
+                      </span>
+                      <p className="text-white font-semibold text-[13px] leading-snug">{item.title}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+
+            {/* Mobile Grid (2-column uniform layout) */}
+            <div
+              className="grid md:hidden gap-2.5 mb-6"
+              style={{
+                gridTemplateColumns: "repeat(2, 1fr)",
+                opacity: mounted ? 1 : 0,
+                transition: "opacity 0.3s ease",
+              }}
+            >
+              {pageItems.map(item => (
+                <div
+                  key={item.id}
+                  className="relative overflow-hidden cursor-pointer"
+                  style={{
+                    aspectRatio: "1/1",
+                    borderRadius: "var(--r-lg)",
+                    background: "var(--surface)",
+                  }}
+                  onClick={() => setLightbox(item)}
+                >
+                  <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                  <div
+                    className="absolute inset-x-0 bottom-0 p-2"
+                    style={{ background: "linear-gradient(to top, rgba(5,10,20,0.8), transparent)" }}
+                  >
+                    <p className="text-white text-[10px] font-semibold leading-snug">{item.title}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── PAGINATION CONTROLS (Halaman 1 / Halaman 2) ── */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4" style={{ borderTop: "1px solid var(--border)" }}>
+                <p className="text-[12px]" style={{ color: "var(--text-3)", fontFamily: "'Inter',sans-serif" }}>
+                  Menampilkan {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, filtered.length)} dari {filtered.length} karya
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={safePage === 1}
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    className="btn btn-sm btn-ghost"
+                    style={{ opacity: safePage === 1 ? 0.4 : 1, cursor: safePage === 1 ? "not-allowed" : "pointer" }}
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span>Sebelumnya</span>
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }).map((_, i) => {
+                      const pageNum = i + 1;
+                      const isCurrent = pageNum === safePage;
+                      return (
+                        <button
+                          key={pageNum}
+                          type="button"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className="w-8 h-8 rounded text-[12px] font-semibold flex items-center justify-center transition-all cursor-pointer"
+                          style={isCurrent
+                            ? { background: "var(--blue)", color: "#fff", boxShadow: "var(--shadow-blue)" }
+                            : { background: "var(--surface)", color: "var(--text-2)", border: "1px solid var(--border)" }
+                          }
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={safePage === totalPages}
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    className="btn btn-sm btn-ghost"
+                    style={{ opacity: safePage === totalPages ? 0.4 : 1, cursor: safePage === totalPages ? "not-allowed" : "pointer" }}
+                  >
+                    <span>Selanjutnya</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
-      {/* Lightbox */}
-      {selectedImage && (
+      {/* Lightbox Modal */}
+      {lightbox && (
         <div
-          className="fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.92)", backdropFilter: "blur(8px)" }}
+          onClick={() => setLightbox(null)}
         >
           <div
-            className="relative max-w-3xl w-full rounded-2xl overflow-hidden shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-3xl w-full overflow-hidden"
+            style={{ borderRadius: "var(--r-2xl)", boxShadow: "var(--shadow-xl)" }}
+            onClick={e => e.stopPropagation()}
           >
-            <img
-              src={selectedImage.imageUrl}
-              alt={selectedImage.title}
-              className="w-full h-auto object-cover"
-            />
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950/80 to-transparent">
-              <p className="text-white font-bold text-sm">{selectedImage.title}</p>
-              <span className="text-slate-300 text-[11px]">{selectedImage.category}</span>
+            <img src={lightbox.imageUrl} alt={lightbox.title} className="w-full h-auto" />
+            <div className="absolute bottom-0 left-0 right-0 p-4" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)" }}>
+              <p className="text-white font-semibold text-[13px]">{lightbox.title}</p>
+              <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>{lightbox.category}</p>
             </div>
             <button
               type="button"
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-3 right-3 p-2 bg-slate-900/70 backdrop-blur-sm rounded-full text-white hover:bg-slate-900 transition-colors"
+              onClick={() => setLightbox(null)}
+              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-white"
+              style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)", borderRadius: "var(--r-sm)" }}
             >
               <X className="w-4 h-4" />
             </button>

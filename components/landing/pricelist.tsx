@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Check, ArrowRight } from "lucide-react";
+import { Check } from "lucide-react";
 import { ServicePackage, INITIAL_PACKAGES } from "@/app/admin/item-jasa/page";
 
 interface PricelistSectionProps {
@@ -12,148 +12,154 @@ export function PricelistSection({ onSelectPackage }: PricelistSectionProps) {
   const [packages, setPackages] = useState<ServicePackage[]>(INITIAL_PACKAGES);
 
   useEffect(() => {
-    const loadPackages = () => {
+    const load = () => {
       const saved = localStorage.getItem("cosgen_pricelist_packages");
-      if (saved) {
-        try { setPackages(JSON.parse(saved)); } catch (e) { console.error(e); }
-      }
+      if (saved) { try { setPackages(JSON.parse(saved)); } catch {} }
       fetch(`/api/pricelist?t=${Date.now()}`, { cache: "no-store" })
-        .then((r) => r.json())
-        .then((d) => {
-          if (d.packages && Array.isArray(d.packages) && d.packages.length > 0) {
-            setPackages(d.packages);
-            localStorage.setItem("cosgen_pricelist_packages", JSON.stringify(d.packages));
-          }
-        })
-        .catch(() => {});
+        .then(r => r.json()).then(d => {
+          if (d.packages?.length) { setPackages(d.packages); try { localStorage.setItem("cosgen_pricelist_packages", JSON.stringify(d.packages)); } catch {} }
+        }).catch(() => {});
     };
-    loadPackages();
-    window.addEventListener("cosgen_pricelist_updated", loadPackages);
-    window.addEventListener("storage", loadPackages);
-    return () => {
-      window.removeEventListener("cosgen_pricelist_updated", loadPackages);
-      window.removeEventListener("storage", loadPackages);
-    };
+    load();
+    window.addEventListener("cosgen_pricelist_updated", load);
+    window.addEventListener("storage", load);
+    return () => { window.removeEventListener("cosgen_pricelist_updated", load); window.removeEventListener("storage", load); };
   }, []);
 
-  const activePackages = packages.filter((p) => p.isActive);
+  const active = packages.filter(p => p.isActive);
 
   return (
-    <section id="pricelist" className="py-16 sm:py-20 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-900 transition-colors">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+    <section id="pricelist" className="section" style={{ background: "var(--bg)" }}>
+      <div className="container">
 
-        {/* Heading */}
-        <div className="text-center mb-12">
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.18em] mb-3">
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        {/* Header */}
+        <div className="mb-12">
+          <div className="section-tag mb-3">
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+            </svg>
             Paket Layanan
-          </span>
-          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-            Pilih Paket Terbaik Kamu
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-3 max-w-md mx-auto leading-relaxed">
-            Mulai dari retouch simpel hingga full compositing CGI sinematik. Semua paket garansi revisi.
-          </p>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <h2 className="headline" style={{ fontSize: "clamp(24px,3.5vw,44px)", color: "var(--text-1)" }}>
+              Pilih Paket Kamu
+            </h2>
+            <p className="text-[13px] max-w-sm sm:text-right" style={{ color: "var(--text-2)", fontFamily: "'Inter',sans-serif" }}>
+              Semua paket sudah termasuk revisi 1x dan pengiriman file resolusi penuh
+            </p>
+          </div>
         </div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
-          {activePackages.map((pkg) => {
-            const discountPct = pkg.discountPercent || 0;
-            const finalPrice = Math.max(0, Math.round(pkg.price * (1 - discountPct / 100)));
-            const isPopular = pkg.isPopular;
+        {/* CSS override for responsive grid */}
+        <style>{`
+          @media (max-width: 767px) {
+            #pricelist-grid { grid-template-columns: 1fr !important; }
+          }
+          @media (min-width: 768px) and (max-width: 1023px) {
+            #pricelist-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          }
+        `}</style>
+
+        {/* Cards grid */}
+        <div
+          id="pricelist-grid"
+          className="grid gap-6"
+          style={{
+            gridTemplateColumns: `repeat(${Math.min(active.length, 3)}, minmax(0, 1fr))`,
+          }}
+        >
+          {active.map((pkg) => {
+            const disc  = pkg.discountPercent || 0;
+            const final = Math.round(pkg.price * (1 - disc / 100));
+            const pop   = pkg.isPopular;
 
             return (
               <div
                 key={pkg.id}
-                className={`relative flex flex-col rounded-3xl p-7 transition-all duration-300 ${
-                  isPopular
-                    ? "bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 text-white shadow-2xl shadow-blue-600/30 ring-2 ring-blue-400/50 scale-[1.02] z-10"
-                    : "bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg hover:-translate-y-1"
-                }`}
+                className="relative flex flex-col"
+                style={pop ? {
+                  background: "linear-gradient(160deg, #2563EB 0%, #1d4ed8 100%)",
+                  borderRadius: "var(--r-xl)",
+                  boxShadow: "var(--shadow-blue-lg), 0 0 0 1px rgba(99,163,255,0.25)",
+                  padding: "24px",
+                } : {
+                  background: "var(--surface)",
+                  border: "1px solid var(--border-md)",
+                  borderRadius: "var(--r-xl)",
+                  padding: "24px",
+                }}
               >
-                {/* Popular badge */}
-                {isPopular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="px-4 py-1 bg-amber-400 text-slate-900 text-[10px] font-black rounded-full uppercase tracking-wide shadow-lg">
-                      ✦ Paling Diminati
-                    </span>
-                  </div>
-                )}
-
-                {/* Discount tag */}
-                {discountPct > 0 && (
-                  <span className={`absolute top-5 right-5 px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wide ${
-                    isPopular ? "bg-white/20 text-white" : "bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400"
-                  }`}>
-                    -{discountPct}%
+                {pop && (
+                  <span className="label absolute -top-3.5 left-5" style={{ background: "var(--amber)", color: "#111", border: "none" }}>
+                    ✦ Paling Diminati
                   </span>
                 )}
 
-                {/* Package name */}
+                {disc > 0 && (
+                  <span className="label w-fit mb-4" style={pop
+                    ? { background: "rgba(255,255,255,0.18)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }
+                    : { background: "var(--coral-dim)", color: "var(--coral)", border: "none" }
+                  }>
+                    -{disc}% DISKON
+                  </span>
+                )}
+
                 <div className="mb-5">
-                  <p className={`text-[10px] font-black uppercase tracking-[0.15em] mb-1 ${
-                    isPopular ? "text-blue-200" : "text-blue-600 dark:text-blue-400"
-                  }`}>
-                    Paket
-                  </p>
-                  <h3 className={`text-2xl font-black tracking-tight ${isPopular ? "text-white" : "text-slate-900 dark:text-white"}`}>
-                    {pkg.name}
-                  </h3>
-                  <p className={`text-[12px] mt-1.5 leading-relaxed ${isPopular ? "text-blue-100" : "text-slate-500 dark:text-slate-400"}`}>
-                    {pkg.description}
-                  </p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-1" style={{ color: pop ? "rgba(255,255,255,0.5)" : "var(--text-3)", fontFamily: "'Inter',sans-serif" }}>Paket</p>
+                  <h3 className="headline text-xl" style={{ color: pop ? "#fff" : "var(--text-1)" }}>{pkg.name}</h3>
+                  <p className="text-[12px] mt-1.5 leading-relaxed" style={{ color: pop ? "rgba(255,255,255,0.6)" : "var(--text-2)", fontFamily: "'Inter',sans-serif" }}>{pkg.description}</p>
                 </div>
 
-                {/* Price */}
-                <div className={`pb-5 mb-5 border-b ${isPopular ? "border-white/20" : "border-slate-200 dark:border-slate-700"}`}>
-                  {discountPct > 0 && (
-                    <p className={`text-[11px] font-mono line-through ${isPopular ? "text-blue-200" : "text-slate-400"}`}>
+                <div className="pb-5 mb-5" style={{ borderBottom: `1px solid ${pop ? "rgba(255,255,255,0.15)" : "var(--border)"}` }}>
+                  {disc > 0 && (
+                    <p className="text-[11px] line-through mb-0.5" style={{ color: pop ? "rgba(255,255,255,0.4)" : "var(--text-4)", fontFamily: "monospace" }}>
                       Rp {pkg.price.toLocaleString("id-ID")}
                     </p>
                   )}
-                  <div className="flex items-baseline gap-1 mt-0.5">
-                    <span className={`text-3xl font-black font-mono tracking-tight ${isPopular ? "text-white" : "text-slate-900 dark:text-white"}`}>
-                      Rp {finalPrice.toLocaleString("id-ID")}
-                    </span>
+                  <div className="headline text-3xl font-bold" style={{ color: pop ? "#fff" : "var(--text-1)" }}>
+                    Rp {final.toLocaleString("id-ID")}
                   </div>
-                  <span className={`text-[11px] font-semibold mt-1 block ${isPopular ? "text-blue-200" : "text-blue-600 dark:text-blue-400"}`}>
+                  <p className="text-[11px] font-semibold mt-1" style={{ color: pop ? "rgba(255,255,255,0.65)" : "var(--blue)", fontFamily: "'Inter',sans-serif" }}>
                     {pkg.revisionLimit}
-                  </span>
+                  </p>
                 </div>
 
-                {/* Features */}
-                <ul className="space-y-2.5 flex-1 mb-7">
-                  {pkg.features.map((feat, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5">
-                      <span className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                        isPopular ? "bg-white/20" : "bg-blue-100 dark:bg-blue-950"
-                      }`}>
-                        <Check className={`w-2.5 h-2.5 ${isPopular ? "text-white" : "text-blue-600 dark:text-blue-400"}`} />
+                <ul className="flex-1 space-y-2.5 mb-6">
+                  {pkg.features.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2.5">
+                      <span className="w-4 h-4 rounded flex items-center justify-center shrink-0 mt-0.5"
+                        style={pop ? { background: "rgba(255,255,255,0.2)" } : { background: "var(--blue-dim)", border: "1px solid var(--blue-border)" }}>
+                        <Check className="w-2.5 h-2.5" style={{ color: pop ? "#fff" : "var(--blue)" }} />
                       </span>
-                      <span className={`text-[12px] leading-snug ${isPopular ? "text-blue-50" : "text-slate-600 dark:text-slate-300"}`}>
-                        {feat}
-                      </span>
+                      <span className="text-[12px] leading-snug" style={{ color: pop ? "rgba(255,255,255,0.75)" : "var(--text-2)", fontFamily: "'Inter',sans-serif" }}>{f}</span>
                     </li>
                   ))}
                 </ul>
 
-                {/* CTA */}
                 <button
                   type="button"
-                  onClick={() => onSelectPackage && onSelectPackage(pkg.name)}
-                  className={`w-full py-3 rounded-2xl text-[12px] font-black transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] ${
-                    isPopular
-                      ? "bg-white text-blue-700 hover:bg-blue-50 shadow-xl"
-                      : "bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-500 shadow-md"
-                  }`}
+                  onClick={() => onSelectPackage?.(pkg.name)}
+                  className="w-full btn"
+                  style={pop ? {
+                    background: "#fff", color: "var(--blue-dark)",
+                    borderRadius: "var(--r-md)", fontFamily: "'Inter',sans-serif", minHeight: "44px",
+                  } : {
+                    background: "var(--blue)", color: "#fff",
+                    borderRadius: "var(--r-md)", fontFamily: "'Inter',sans-serif",
+                    boxShadow: "var(--shadow-blue)", minHeight: "44px",
+                  }}
                 >
-                  Mulai dengan {pkg.name} <ArrowRight className="w-3.5 h-3.5" />
+                  Pesan {pkg.name}
                 </button>
               </div>
             );
           })}
         </div>
+
+        {/* Footer note */}
+        <p className="text-center text-[12px] mt-8" style={{ color: "var(--text-3)", fontFamily: "'Inter',sans-serif" }}>
+          Estimasi ±3 hari kerja, mengikuti antrian. Pembayaran setelah ACC.
+        </p>
       </div>
     </section>
   );

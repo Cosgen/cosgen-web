@@ -64,7 +64,8 @@ export function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
           <input
             type="email"
             required
-            placeholder="admin@domain.com"
+            placeholder=""
+            autoComplete="off"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:outline-none"
@@ -82,7 +83,8 @@ export function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
           <input
             type="password"
             required
-            placeholder="••••••••"
+            placeholder=""
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:outline-none"
