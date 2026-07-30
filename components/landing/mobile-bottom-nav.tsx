@@ -169,19 +169,12 @@ export function MobileBottomNav({
       `}
       style={{ animation: "tf-slide-bottom 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards" }}
     >
-      {/* Blur backdrop */}
+      {/* Blur backdrop — dark first */}
       <div
         className="absolute inset-0 backdrop-blur-xl"
         style={{
-          background: "rgba(255,255,255,0.88)",
-          borderTop: "1px solid rgba(0,0,0,0.08)",
-        }}
-      />
-      <div
-        className="dark:absolute dark:inset-0"
-        style={{
-          background: "rgba(15,23,42,0.92)",
-          display: "none",
+          background: "rgba(10,15,30,0.92)",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
         }}
       />
 

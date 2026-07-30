@@ -119,35 +119,35 @@ export function PortfolioSection() {
     filter === "Semua" ? items : items.filter((p) => p.category === filter);
 
   return (
-    <section id="portfolio" className="py-16 sm:py-24 transition-colors" style={{ background: "var(--tf-surface)" }}>
+    <section id="portfolio" className="py-16 sm:py-24" style={{ background: "var(--tf-surface)" }}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Heading row */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
-            <span
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest mb-4"
-              style={{ background: "var(--tf-primary-light)", color: "var(--tf-primary)" }}
-            >
+            <div className="tf-section-label mb-4">
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
                 <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
               </svg>
               Portofolio
-            </span>
-            <h2 className="font-headline text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+            </div>
+            <h2 className="font-headline font-black tracking-tight" style={{ fontSize: "clamp(28px,4vw,48px)", color: "var(--tf-text-primary)" }}>
               Karya Terbaik
             </h2>
           </div>
 
-          {/* Filter chips — TouchFlow style */}
+          {/* Filter chips */}
           <div className="flex items-center gap-2 flex-wrap">
             {(["Semua", "Regular", "Background Premium"] as const).map((cat) => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => setFilter(cat)}
-                className="tf-chip tf-chip-filter tf-press-sm"
-                style={{ background: filter === cat ? "var(--tf-primary-light)" : "var(--tf-bg)", color: filter === cat ? "var(--tf-primary)" : "var(--tf-text-secondary)", border: `1.5px solid ${filter === cat ? "var(--tf-primary)" : "var(--tf-border)"}` }}
+                className="tf-chip tf-press-sm"
+                style={filter === cat
+                  ? { background: "var(--tf-primary-dim)", color: "var(--tf-primary)", border: "1.5px solid var(--tf-primary-border)" }
+                  : { background: "var(--tf-surface-2)", color: "var(--tf-text-secondary)", border: "1.5px solid var(--tf-border)" }
+                }
               >
                 {cat}
               </button>
@@ -156,46 +156,52 @@ export function PortfolioSection() {
         </div>
 
         {/* Masonry Grid */}
-        <div className={`columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4 transition-opacity duration-150 ${isMounted ? "opacity-100" : "opacity-0"}`}>
-          {filtered.map((item) => (
-            <div
-              key={item.id}
-              className="break-inside-avoid group relative rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-              onClick={() => setSelectedImage(item)}
-            >
-              <img
-                src={item.imageUrl}
-                alt={item.title}
-                className="w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4">
-                <span className={`text-[9px] font-black uppercase tracking-widest mb-1 ${
-                  item.category === "Background Premium" ? "text-amber-400" : "text-blue-400"
-                }`}>
-                  {item.category}
-                </span>
-                <p className="text-white text-[12px] font-bold leading-tight">{item.title}</p>
-              </div>
-              {/* Category badge */}
-              <span className={`absolute top-3 left-3 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide ${
-                item.category === "Background Premium"
-                  ? "bg-amber-400/90 text-slate-900"
-                  : "bg-blue-600/90 text-white"
-              }`}>
-                {item.category === "Background Premium" ? "Premium" : "Regular"}
-              </span>
-              {/* Expand button */}
-              <button
-                type="button"
-                className="absolute top-3 right-3 p-1.5 bg-slate-900/60 backdrop-blur-sm rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-slate-900"
-                onClick={(e) => { e.stopPropagation(); setSelectedImage(item); }}
+        {filtered.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-[14px]" style={{ color: "var(--tf-text-tertiary)" }}>Belum ada karya — tambahkan dari panel admin.</p>
+          </div>
+        ) : (
+          <div className={`columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4 transition-opacity duration-300 ${isMounted ? "opacity-100" : "opacity-0"}`}>
+            {filtered.map((item) => (
+              <div
+                key={item.id}
+                className="break-inside-avoid group relative rounded-2xl overflow-hidden cursor-pointer tf-press"
+                style={{ boxShadow: "var(--tf-shadow-sm)", transition: "transform 250ms ease, box-shadow 250ms ease" }}
+                onClick={() => setSelectedImage(item)}
+                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "var(--tf-shadow-lg)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "var(--tf-shadow-sm)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; }}
               >
-                <Maximize2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
-        </div>
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  className="w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                {/* Persistent dark gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(10,15,30,0.85)] via-[rgba(10,15,30,0.1)] to-transparent" />
+                {/* Info */}
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <span
+                    className="text-[9px] font-black uppercase tracking-widest block mb-1"
+                    style={{ color: item.category === "Background Premium" ? "#FBBF24" : "#60A5FA" }}
+                  >
+                    {item.category}
+                  </span>
+                  <p className="text-white text-[12px] font-bold leading-tight">{item.title}</p>
+                </div>
+                {/* Expand icon */}
+                <button
+                  type="button"
+                  aria-label="Perbesar"
+                  className="absolute top-3 right-3 p-1.5 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all"
+                  style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
+                  onClick={e => { e.stopPropagation(); setSelectedImage(item); }}
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Lightbox */}
