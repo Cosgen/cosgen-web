@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Sparkles } from "lucide-react";
+import { getStoredOrders } from "@/lib/order-store";
 
 interface SlotAvailabilityCheckerProps {
   isOpen: boolean;
@@ -64,27 +65,44 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
     if (!isOpen) return;
 
     const loadRealtimeSlots = async () => {
+      let ordersToCount: any[] = [];
+
       // 1. Fetch server order count directly
       try {
         const res = await fetch(`/api/orders?t=${Date.now()}`, { cache: "no-store" });
         if (res.ok) {
           const d = await res.json();
-          if (d.orders && Array.isArray(d.orders)) {
-            const activeOrders = d.orders.filter((o: any) => o.status !== "Ditolak");
-            const totalPhotosUsed = activeOrders.reduce((sum: number, o: any) => sum + Math.max(1, Number(o.photo_count || o.photoCount) || 1), 0);
-            setUsedSlots(totalPhotosUsed);
+          if (d.orders && Array.isArray(d.orders) && d.orders.length > 0) {
+            ordersToCount = d.orders;
           }
         }
       } catch (e) {
         console.warn("Direct order fetch notice:", e);
       }
 
+      // If server returned 0 orders (or cold start), fallback to stored orders
+      if (ordersToCount.length === 0) {
+        const local = getStoredOrders();
+        if (local.length > 0) {
+          ordersToCount = local;
+        }
+      }
+
+      const activeOrders = ordersToCount.filter((o: any) => o.status !== "Ditolak");
+      const totalPhotosUsed = activeOrders.reduce(
+        (sum: number, o: any) => sum + Math.max(1, Number(o.photo_count || o.photoCount) || 1),
+        0
+      );
+      setUsedSlots(totalPhotosUsed);
+
       // 2. Load scheduler settings from server API
       try {
         const res = await fetch(`/api/scheduler?t=${Date.now()}`, { cache: "no-store" });
         const d = await res.json();
         if (d && d.settings) {
-          if (typeof d.settings.totalSlots === "number") setTotalSlots(d.settings.totalSlots);
+          if (typeof d.settings.totalSlots === "number" && d.settings.totalSlots > 0) {
+            setTotalSlots(d.settings.totalSlots);
+          }
           if (Array.isArray(d.settings.holidays)) setHolidays(d.settings.holidays);
           localStorage.setItem("cosgen_scheduler_data", JSON.stringify(d.settings));
         }

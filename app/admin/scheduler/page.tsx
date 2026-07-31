@@ -58,29 +58,40 @@ export default function AdminSchedulerPage() {
   useEffect(() => {
     // 1. Fetch real-time active order count directly from server DB
     const loadRealtimeData = async () => {
+      let ordersToCount: any[] = [];
+
       try {
         const res = await fetch(`/api/orders?t=${Date.now()}`, { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
-          if (json.orders && Array.isArray(json.orders)) {
-            const activeOrders = json.orders.filter((o: any) => o.status !== "Ditolak");
-            const totalPhotosUsed = activeOrders.reduce((sum: number, o: any) => sum + Math.max(1, Number(o.photo_count || o.photoCount) || 1), 0);
-            setUsedSlots(totalPhotosUsed);
+          if (json.orders && Array.isArray(json.orders) && json.orders.length > 0) {
+            ordersToCount = json.orders;
           }
         }
       } catch (e) {
-        const orders = getStoredOrders();
-        const activeLocal = orders.filter((o) => o.status !== "Ditolak");
-        const totalPhotosUsed = activeLocal.reduce((sum, o) => sum + Math.max(1, o.photoCount || 1), 0);
-        setUsedSlots(totalPhotosUsed);
+        console.warn("Realtime fetch notice:", e);
       }
+
+      if (ordersToCount.length === 0) {
+        const local = getStoredOrders();
+        if (local.length > 0) ordersToCount = local;
+      }
+
+      const activeOrders = ordersToCount.filter((o: any) => o.status !== "Ditolak");
+      const totalPhotosUsed = activeOrders.reduce(
+        (sum: number, o: any) => sum + Math.max(1, Number(o.photo_count || o.photoCount) || 1),
+        0
+      );
+      setUsedSlots(totalPhotosUsed);
 
       // 2. Load scheduler settings from server API
       try {
         const res = await fetch(`/api/scheduler?t=${Date.now()}`, { cache: "no-store" });
         const d = await res.json();
         if (d && d.settings) {
-          if (typeof d.settings.totalSlots === "number") setTotalSlots(d.settings.totalSlots);
+          if (typeof d.settings.totalSlots === "number" && d.settings.totalSlots > 0) {
+            setTotalSlots(d.settings.totalSlots);
+          }
           if (Array.isArray(d.settings.holidays)) setHolidays(d.settings.holidays);
           localStorage.setItem("cosgen_scheduler_data", JSON.stringify(d.settings));
         }
