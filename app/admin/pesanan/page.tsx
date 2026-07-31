@@ -63,26 +63,40 @@ export default function AdminPesananListPage() {
 
   const handleForceSyncToCloud = async () => {
     setSyncing(true);
+    setSyncMsg("⏳ Menyinkronkan ke Supabase...");
     try {
       const current = getStoredOrders();
-      saveOrdersToStorage(current);
+      if (current.length === 0) {
+        setSyncMsg("⚠️ Tidak ada pesanan lokal untuk di-sync.");
+        setSyncing(false);
+        setTimeout(() => setSyncMsg(""), 4000);
+        return;
+      }
+
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "sync", orders: current }),
       });
+
       if (res.ok) {
         const json = await res.json();
-        const total = json.orders?.length || current.length;
-        setSyncMsg(`✅ Data Berhasil Di-sync ke Cloud (${total} Pesanan Aktif)!`);
+        const cloudCount = json.orders?.length || 0;
+        if (cloudCount > 0) {
+          setSyncMsg(`✅ Sync berhasil! ${cloudCount} pesanan tersimpan di cloud. HP bisa cek sekarang.`);
+        } else {
+          // Server responded OK but returned 0 orders — Supabase might be empty
+          setSyncMsg("⚠️ API OK tapi Supabase kosong. Coba lagi atau hubungi support.");
+        }
       } else {
-        setSyncMsg("⚠️ Server merespon perlahan, mencoba ulang...");
+        const errText = await res.text().catch(() => "Unknown error");
+        setSyncMsg(`❌ Gagal sync: HTTP ${res.status} — ${errText.slice(0, 80)}`);
       }
-    } catch {
-      setSyncMsg("⚠️ Gagal sync ke cloud");
+    } catch (err: any) {
+      setSyncMsg(`❌ Error: ${err?.message || "Koneksi gagal"}`);
     }
     setSyncing(false);
-    setTimeout(() => setSyncMsg(""), 4500);
+    setTimeout(() => setSyncMsg(""), 6000);
   };
 
   return (

@@ -215,6 +215,7 @@ function CekStatusContent() {
   const [allOrders, setAllOrders] = useState<OrderData[]>([]);
   const [currentOrder, setCurrentOrder] = useState<OrderData | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [snapModalOpen, setSnapModalOpen] = useState(false);
   const [revisionChatOpen, setRevisionChatOpen] = useState(false);
 
@@ -284,14 +285,18 @@ function CekStatusContent() {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    setHasSearched(true);
     const clean = inputCode.trim();
     if (!clean) {
       setCurrentOrder(null);
+      setHasSearched(true);
       return;
     }
 
-    // 1. Always fetch fresh directly from server API (bypasses localStorage → works on mobile)
+    setIsSearching(true);
+    setHasSearched(true);
+    setCurrentOrder(null);
+
+    // Always fetch fresh directly from server API (bypasses localStorage → works on mobile)
     try {
       const res = await fetch(`/api/orders?t=${Date.now()}&r=${Math.random()}`, {
         cache: "no-store",
@@ -310,12 +315,13 @@ function CekStatusContent() {
         const found = freshOrders.find((o) => matchOrder(o, clean));
         if (found) {
           setCurrentOrder(found);
+          setIsSearching(false);
           return;
         }
       }
     } catch {}
 
-    // 2. Fallback: check localStorage (Desktop)
+    // Fallback: check localStorage (Desktop)
     const localOrders = getStoredOrders();
     const localFound = localOrders.find((o) => matchOrder(o, clean));
     if (localFound) {
@@ -323,6 +329,7 @@ function CekStatusContent() {
     } else {
       setCurrentOrder(null);
     }
+    setIsSearching(false);
   };
 
   return (
@@ -354,9 +361,17 @@ function CekStatusContent() {
         </div>
         <button
           type="submit"
-          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[12px] font-bold shadow-md shadow-blue-600/20 shrink-0 transition-all hover:scale-[1.02] active:scale-95"
+          disabled={isSearching}
+          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-2xl text-[12px] font-bold shadow-md shadow-blue-600/20 shrink-0 transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-2"
         >
-          Cari
+          {isSearching ? (
+            <>
+              <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Mencari...</span>
+            </>
+          ) : (
+            <>Cari</>
+          )}
         </button>
       </form>
 
