@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { OrderData, mergeOrders } from "@/lib/order-store";
+import { OrderData, mergeOrders } from "@/lib/order-types";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
