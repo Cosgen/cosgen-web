@@ -33,7 +33,7 @@ export default function RootLayout({
     <html
       lang="id"
       suppressHydrationWarning
-      className={cn("dark antialiased", spaceGrotesk.variable, inter.variable)}
+      className={cn("antialiased", spaceGrotesk.variable, inter.variable)}
     >
       <body>
         <ThemeProvider>{children}</ThemeProvider>
