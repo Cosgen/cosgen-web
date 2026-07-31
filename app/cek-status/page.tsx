@@ -252,7 +252,7 @@ function CekStatusContent() {
     };
   }, [inputCode, initialCode]);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setHasSearched(true);
     const clean = inputCode.trim().toUpperCase();
@@ -260,18 +260,42 @@ function CekStatusContent() {
       setCurrentOrder(null);
       return;
     }
-    const orders = getStoredOrders();
-    const found = orders.find(
+
+    // 1. Immediate search in local orders
+    const localOrders = getStoredOrders();
+    const localFound = localOrders.find(
       (o) =>
-        o.code.toUpperCase() === clean ||
+        (o.code && o.code.toUpperCase() === clean) ||
         (o.officialCode && o.officialCode.toUpperCase() === clean) ||
-        (o.tempCode && o.tempCode.toUpperCase() === clean)
+        (o.tempCode && o.tempCode.toUpperCase() === clean) ||
+        (o.id && o.id.toUpperCase() === clean)
     );
-    if (found) {
-      setCurrentOrder(found);
-    } else {
-      setCurrentOrder(null);
-      alert(`Kode pesanan "${clean}" tidak ditemukan.`);
+    if (localFound) {
+      setCurrentOrder(localFound);
+    }
+
+    // 2. Fetch fresh global orders from server API for mobile/multi-device sync
+    try {
+      const freshOrders = await syncGlobalOrdersFromServer();
+      setAllOrders(freshOrders);
+      const freshFound = freshOrders.find(
+        (o) =>
+          (o.code && o.code.toUpperCase() === clean) ||
+          (o.officialCode && o.officialCode.toUpperCase() === clean) ||
+          (o.tempCode && o.tempCode.toUpperCase() === clean) ||
+          (o.id && o.id.toUpperCase() === clean)
+      );
+      if (freshFound) {
+        setCurrentOrder(freshFound);
+      } else if (!localFound) {
+        setCurrentOrder(null);
+        alert(`Kode pesanan "${clean}" tidak ditemukan.`);
+      }
+    } catch {
+      if (!localFound) {
+        setCurrentOrder(null);
+        alert(`Kode pesanan "${clean}" tidak ditemukan.`);
+      }
     }
   };
 
