@@ -90,38 +90,6 @@ export function mergeOrders(primary: OrderData[], secondary: OrderData[]): Order
   return Array.from(map.values());
 }
 
-export function mergeOrdersServerAuthority(serverOrders: OrderData[], localOrders: OrderData[]): OrderData[] {
-  const serverKeys = new Set<string>();
-  serverOrders.forEach((o) => {
-    if (o.id) serverKeys.add(o.id);
-    if (o.code) serverKeys.add(o.code);
-    if (o.officialCode) serverKeys.add(o.officialCode);
-    if (o.tempCode) serverKeys.add(o.tempCode);
-  });
-
-  const now = Date.now();
-  const recentInFlightLocal = localOrders.filter((o) => {
-    const isPresentOnServer =
-      (o.id && serverKeys.has(o.id)) ||
-      (o.code && serverKeys.has(o.code)) ||
-      (o.officialCode && serverKeys.has(o.officialCode)) ||
-      (o.tempCode && serverKeys.has(o.tempCode));
-
-    if (isPresentOnServer) return false;
-
-    let time = new Date(o.createdAt).getTime();
-    if (isNaN(time) && o.createdAt) {
-      time = new Date(o.createdAt.replace(" ", "T")).getTime();
-    }
-
-    // Fail safe: if date parsing fails or order was created within last 5 mins (300,000ms), KEEP local order!
-    if (isNaN(time)) return true;
-    return now - time < 300000;
-  });
-
-  return mergeOrders(serverOrders, recentInFlightLocal);
-}
-
 // Fetch latest global orders from server API (Supabase) and merge safely with local
 export async function syncGlobalOrdersFromServer(): Promise<OrderData[]> {
   try {
@@ -130,8 +98,8 @@ export async function syncGlobalOrdersFromServer(): Promise<OrderData[]> {
       const data = await res.json();
       if (data.orders && Array.isArray(data.orders)) {
         const localOrders = getStoredOrders();
-        // Use Server Authority merge to purge deleted orders
-        const merged = mergeOrdersServerAuthority(data.orders, localOrders);
+        // Permanently safe merge — NEVER expire or purge orders by timer!
+        const merged = mergeOrders(data.orders, localOrders);
         if (typeof window !== "undefined") {
           localStorage.setItem("cosgen_admin_orders", JSON.stringify(merged));
           window.dispatchEvent(new Event("cosgen_orders_updated"));
@@ -182,7 +150,7 @@ export async function saveNewSingleOrder(newOrder: OrderData): Promise<OrderData
     if (res.ok) {
       const json = await res.json();
       if (json.orders && Array.isArray(json.orders)) {
-        const merged = mergeOrdersServerAuthority(json.orders, updated);
+        const merged = mergeOrders(json.orders, updated);
         saveOrdersToStorage(merged);
         return merged;
       }
@@ -239,7 +207,7 @@ export async function updateSingleOrder(orderId: string, partial: Partial<OrderD
     if (res.ok) {
       const json = await res.json();
       if (json.orders && Array.isArray(json.orders)) {
-        const merged = mergeOrdersServerAuthority(json.orders, updated);
+        const merged = mergeOrders(json.orders, updated);
         saveOrdersToStorage(merged);
         return merged.find(
           (o) =>
