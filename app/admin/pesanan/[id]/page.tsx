@@ -90,8 +90,14 @@ export default function AdminOrderDetailPage() {
       newStatus === "Review Hasil" ||
       newStatus === "Review Pelanggan";
 
+    const finalLink =
+      newStatus === "Selesai"
+        ? order.gdriveFinalUrl || order.gdriveReviewUrl || order.customerGdriveUrl
+        : order.gdriveFinalUrl;
+
     saveChanges({
       status: newStatus,
+      gdriveFinalUrl: finalLink,
       reviewStartedAt: isReview
         ? order.reviewStartedAt || new Date().toISOString()
         : order.reviewStartedAt,
