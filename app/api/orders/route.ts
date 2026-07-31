@@ -161,13 +161,35 @@ export async function POST(request: Request) {
 
     // Action: DELETE SINGLE ORDER
     if (action === "delete" && orderId) {
-      globalServerOrders = globalServerOrders.filter((o) => o.id !== orderId);
+      globalServerOrders = globalServerOrders.filter(
+        (o) =>
+          o.id !== orderId &&
+          o.code !== orderId &&
+          (o.officialCode ? o.officialCode !== orderId : true) &&
+          (o.tempCode ? o.tempCode !== orderId : true)
+      );
+
       const supabase = getSupabaseClient();
       if (supabase) {
         try {
           await supabase.from("orders").delete().eq("id", orderId);
         } catch (e) {
-          console.warn("Supabase delete notice:", e);
+          console.warn("Supabase delete by id notice:", e);
+        }
+        try {
+          await supabase.from("orders").delete().eq("code", orderId);
+        } catch (e) {
+          console.warn("Supabase delete by code notice:", e);
+        }
+        try {
+          await supabase.from("orders").delete().eq("official_code", orderId);
+        } catch (e) {
+          console.warn("Supabase delete by official_code notice:", e);
+        }
+        try {
+          await supabase.from("orders").delete().eq("temp_code", orderId);
+        } catch (e) {
+          console.warn("Supabase delete by temp_code notice:", e);
         }
       }
       return NextResponse.json({ success: true, orders: globalServerOrders });
