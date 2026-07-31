@@ -7,7 +7,7 @@ export interface SchedulerSettings {
 }
 
 let globalServerScheduler: SchedulerSettings = {
-  totalSlots: 25,
+  totalSlots: 5,
   holidays: [],
 };
 
