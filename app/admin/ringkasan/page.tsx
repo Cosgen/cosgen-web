@@ -27,7 +27,12 @@ export default function AdminBusinessSummaryPage() {
       if (latest && Array.isArray(latest)) setOrders(latest);
     });
 
-    const handleUpdate = () => setOrders(getStoredOrders());
+    const handleUpdate = () => {
+      setOrders(getStoredOrders());
+      syncGlobalOrdersFromServer().then((latest) => {
+        if (latest && Array.isArray(latest)) setOrders(latest);
+      });
+    };
     window.addEventListener("cosgen_orders_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
 

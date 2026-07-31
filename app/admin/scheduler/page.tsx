@@ -96,8 +96,7 @@ export default function AdminSchedulerPage() {
     loadRealtimeData();
 
     const handleUpdate = () => {
-      const active = getStoredOrders().filter((o) => o.status !== "Ditolak");
-      setUsedSlots(active.length);
+      loadRealtimeData();
     };
     window.addEventListener("cosgen_orders_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
