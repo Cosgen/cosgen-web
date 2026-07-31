@@ -223,14 +223,9 @@ function CekStatusContent() {
       const orders = getStoredOrders();
       setAllOrders(orders);
 
-      const target = (inputCode || initialCode).trim().toUpperCase();
+      const target = (inputCode || initialCode).trim();
       if (target) {
-        const found = orders.find(
-          (o) =>
-            o.code.toUpperCase() === target ||
-            (o.officialCode && o.officialCode.toUpperCase() === target) ||
-            (o.tempCode && o.tempCode.toUpperCase() === target)
-        );
+        const found = orders.find((o) => matchOrder(o, target));
         if (found) {
           setCurrentOrder(found);
         } else {
@@ -252,10 +247,27 @@ function CekStatusContent() {
     };
   }, [inputCode, initialCode]);
 
+  const matchOrder = (o: OrderData, q: string) => {
+    const target = q.trim().toUpperCase();
+    if (!target) return false;
+    const rawWa = (o.whatsapp || "").replace(/\D/g, "");
+    const searchWa = q.replace(/\D/g, "");
+    const hasWaMatch = searchWa.length >= 4 && rawWa.includes(searchWa);
+
+    return (
+      (o.code && o.code.toUpperCase() === target) ||
+      (o.officialCode && o.officialCode.toUpperCase() === target) ||
+      (o.tempCode && o.tempCode.toUpperCase() === target) ||
+      (o.id && o.id.toUpperCase() === target) ||
+      (o.customerName && o.customerName.toUpperCase().includes(target)) ||
+      hasWaMatch
+    );
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setHasSearched(true);
-    const clean = inputCode.trim().toUpperCase();
+    const clean = inputCode.trim();
     if (!clean) {
       setCurrentOrder(null);
       return;
@@ -263,13 +275,7 @@ function CekStatusContent() {
 
     // 1. Immediate search in local orders
     const localOrders = getStoredOrders();
-    const localFound = localOrders.find(
-      (o) =>
-        (o.code && o.code.toUpperCase() === clean) ||
-        (o.officialCode && o.officialCode.toUpperCase() === clean) ||
-        (o.tempCode && o.tempCode.toUpperCase() === clean) ||
-        (o.id && o.id.toUpperCase() === clean)
-    );
+    const localFound = localOrders.find((o) => matchOrder(o, clean));
     if (localFound) {
       setCurrentOrder(localFound);
     }
@@ -278,23 +284,17 @@ function CekStatusContent() {
     try {
       const freshOrders = await syncGlobalOrdersFromServer();
       setAllOrders(freshOrders);
-      const freshFound = freshOrders.find(
-        (o) =>
-          (o.code && o.code.toUpperCase() === clean) ||
-          (o.officialCode && o.officialCode.toUpperCase() === clean) ||
-          (o.tempCode && o.tempCode.toUpperCase() === clean) ||
-          (o.id && o.id.toUpperCase() === clean)
-      );
+      const freshFound = freshOrders.find((o) => matchOrder(o, clean));
       if (freshFound) {
         setCurrentOrder(freshFound);
       } else if (!localFound) {
         setCurrentOrder(null);
-        alert(`Kode pesanan "${clean}" tidak ditemukan.`);
+        alert(`Kode pesanan / kontak "${clean}" tidak ditemukan.`);
       }
     } catch {
       if (!localFound) {
         setCurrentOrder(null);
-        alert(`Kode pesanan "${clean}" tidak ditemukan.`);
+        alert(`Kode pesanan / kontak "${clean}" tidak ditemukan.`);
       }
     }
   };
