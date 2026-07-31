@@ -131,18 +131,35 @@ export default function AdminSchedulerPage() {
     }
   };
 
-  const handleSaveScheduler = (e: React.FormEvent) => {
+  const handleSaveScheduler = async (e: React.FormEvent) => {
     e.preventDefault();
     const data = { totalSlots, holidays };
     localStorage.setItem("cosgen_scheduler_data", JSON.stringify(data));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("cosgen_orders_updated"));
+    }
 
     try {
-      fetch("/api/scheduler", {
+      const res = await fetch("/api/scheduler", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-      }).catch(() => {});
-    } catch {}
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.settings) {
+          if (typeof json.settings.totalSlots === "number" && json.settings.totalSlots > 0) {
+            setTotalSlots(json.settings.totalSlots);
+          }
+          if (Array.isArray(json.settings.holidays)) {
+            setHolidays(json.settings.holidays);
+          }
+          localStorage.setItem("cosgen_scheduler_data", JSON.stringify(json.settings));
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to save scheduler settings:", err);
+    }
 
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2500);
