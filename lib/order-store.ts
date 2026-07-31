@@ -104,22 +104,15 @@ export function mergeOrders(primary: OrderData[], secondary: OrderData[]): Order
   return Array.from(map.values());
 }
 
-// Fetch latest global orders from server API (Supabase) and merge with local
+// Fetch latest global orders from server API (Supabase) and merge safely with local
 export async function syncGlobalOrdersFromServer(): Promise<OrderData[]> {
   try {
     const res = await fetch(`/api/orders?t=${Date.now()}`, { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       if (data.orders && Array.isArray(data.orders)) {
-        if (data.orders.length === 0) {
-          if (typeof window !== "undefined") {
-            localStorage.setItem("cosgen_admin_orders", JSON.stringify([]));
-            window.dispatchEvent(new Event("cosgen_orders_updated"));
-          }
-          return [];
-        }
-
         const localOrders = getStoredOrders();
+        // Smart merge: never wipe local orders if server responds with 0 orders
         const merged = mergeOrders(data.orders, localOrders);
         if (typeof window !== "undefined") {
           localStorage.setItem("cosgen_admin_orders", JSON.stringify(merged));
