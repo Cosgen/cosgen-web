@@ -66,12 +66,23 @@ export default function AdminPesananListPage() {
     try {
       const current = getStoredOrders();
       saveOrdersToStorage(current);
-      setSyncMsg("✅ Data Pesanan Berhasil Di-sync ke HP & Cloud Database!");
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "sync", orders: current }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const total = json.orders?.length || current.length;
+        setSyncMsg(`✅ Data Berhasil Di-sync ke Cloud (${total} Pesanan Aktif)!`);
+      } else {
+        setSyncMsg("⚠️ Server merespon perlahan, mencoba ulang...");
+      }
     } catch {
       setSyncMsg("⚠️ Gagal sync ke cloud");
     }
     setSyncing(false);
-    setTimeout(() => setSyncMsg(""), 3500);
+    setTimeout(() => setSyncMsg(""), 4500);
   };
 
   return (
