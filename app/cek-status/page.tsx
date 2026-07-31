@@ -22,7 +22,7 @@ import { OrderInvoiceSummary } from "@/components/landing/order-invoice-summary"
 import { MidtransSnapModal } from "@/components/landing/midtrans-snap-modal";
 import { OrderRevisionChat } from "@/components/landing/order-revision-chat";
 import { ReviewStatusBanner } from "@/components/landing/review-status-banner";
-import { getStoredOrders, OrderData, updateSingleOrder, syncGlobalOrdersFromServer } from "@/lib/order-store";
+import { getStoredOrders, OrderData, updateSingleOrder } from "@/lib/order-store";
 
 // ── Roadmap steps definition ──────────────────────────────────────────────────
 const ROADMAP_STEPS = [
@@ -219,25 +219,43 @@ function CekStatusContent() {
   const [revisionChatOpen, setRevisionChatOpen] = useState(false);
 
   useEffect(() => {
-    const fetchOrders = () => {
+    const fetchOrders = async () => {
+      // ALWAYS fetch fresh from server API first — bypasses localStorage (empty on mobile)
+      try {
+        const res = await fetch(`/api/orders?t=${Date.now()}&r=${Math.random()}`, {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache, no-store", "Pragma": "no-cache" },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const serverOrders: OrderData[] = Array.isArray(data.orders) ? data.orders : [];
+          setAllOrders(serverOrders);
+
+          // Persist to localStorage for desktop continuity
+          if (typeof window !== "undefined" && serverOrders.length > 0) {
+            localStorage.setItem("cosgen_admin_orders", JSON.stringify(serverOrders));
+          }
+
+          const target = (inputCode || initialCode).trim();
+          if (target) {
+            const found = serverOrders.find((o) => matchOrder(o, target));
+            if (found) setCurrentOrder(found);
+          }
+          return;
+        }
+      } catch {}
+
+      // Fallback: local storage (desktop only)
       const orders = getStoredOrders();
       setAllOrders(orders);
-
       const target = (inputCode || initialCode).trim();
       if (target) {
         const found = orders.find((o) => matchOrder(o, target));
-        if (found) {
-          setCurrentOrder(found);
-        } else {
-          setCurrentOrder(null);
-        }
-      } else {
-        setCurrentOrder(null);
+        setCurrentOrder(found || null);
       }
     };
 
     fetchOrders();
-    syncGlobalOrdersFromServer().then(() => fetchOrders());
     const handleUpdate = () => fetchOrders();
     window.addEventListener("cosgen_orders_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
@@ -273,29 +291,37 @@ function CekStatusContent() {
       return;
     }
 
-    // 1. Immediate search in local orders
+    // 1. Always fetch fresh directly from server API (bypasses localStorage → works on mobile)
+    try {
+      const res = await fetch(`/api/orders?t=${Date.now()}&r=${Math.random()}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache, no-store", "Pragma": "no-cache" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const freshOrders: OrderData[] = Array.isArray(data.orders) ? data.orders : [];
+        setAllOrders(freshOrders);
+
+        // Persist server data for desktop continuity
+        if (typeof window !== "undefined" && freshOrders.length > 0) {
+          localStorage.setItem("cosgen_admin_orders", JSON.stringify(freshOrders));
+        }
+
+        const found = freshOrders.find((o) => matchOrder(o, clean));
+        if (found) {
+          setCurrentOrder(found);
+          return;
+        }
+      }
+    } catch {}
+
+    // 2. Fallback: check localStorage (Desktop)
     const localOrders = getStoredOrders();
     const localFound = localOrders.find((o) => matchOrder(o, clean));
     if (localFound) {
       setCurrentOrder(localFound);
-    }
-
-    // 2. Fetch fresh global orders from server API for mobile/multi-device sync
-    try {
-      const freshOrders = await syncGlobalOrdersFromServer();
-      setAllOrders(freshOrders);
-      const freshFound = freshOrders.find((o) => matchOrder(o, clean));
-      if (freshFound) {
-        setCurrentOrder(freshFound);
-      } else if (!localFound) {
-        setCurrentOrder(null);
-        alert(`Kode pesanan / kontak "${clean}" tidak ditemukan.`);
-      }
-    } catch {
-      if (!localFound) {
-        setCurrentOrder(null);
-        alert(`Kode pesanan / kontak "${clean}" tidak ditemukan.`);
-      }
+    } else {
+      setCurrentOrder(null);
     }
   };
 

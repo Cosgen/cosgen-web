@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Sparkles } from "lucide-react";
-import { getStoredOrders, syncGlobalOrdersFromServer } from "@/lib/order-store";
+import { getStoredOrders } from "@/lib/order-store";
 
 interface SlotAvailabilityCheckerProps {
   isOpen: boolean;
@@ -67,17 +67,27 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
     const loadRealtimeSlots = async () => {
       let ordersToCount: any[] = [];
 
-      // 1. Fetch server order count & sync global orders directly
+      // Fetch DIRECTLY from server API — bypasses localStorage for full mobile compatibility
       try {
-        const synced = await syncGlobalOrdersFromServer();
-        if (Array.isArray(synced) && synced.length > 0) {
-          ordersToCount = synced;
+        const res = await fetch(`/api/orders?t=${Date.now()}&r=${Math.random()}`, {
+          method: "GET",
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.orders)) {
+            ordersToCount = data.orders;
+          }
         }
       } catch (e) {
         console.warn("Direct order fetch notice:", e);
       }
 
-      // Fallback to stored orders if needed
+      // Fallback to stored orders if API unavailable
       if (ordersToCount.length === 0) {
         const local = getStoredOrders();
         if (local.length > 0) {

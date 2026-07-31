@@ -100,6 +100,12 @@ export async function POST(request: Request) {
           official_code: "_SYSTEM_CONFIG_",
           temp_code: "_SYSTEM_CONFIG_",
           customer_name: "SYSTEM_CONFIG",
+          whatsapp: "000000000000",
+          instagram: "@system",
+          package: "SYSTEM",
+          photo_count: 1,
+          total_amount: 0,
+          status: "Menunggu Konfirmasi",
           brief_text: JSON.stringify(settings),
           created_at: new Date().toISOString(),
         });
