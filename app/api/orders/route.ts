@@ -98,7 +98,56 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { action, order, orderId, partial } = body;
+    const { action, order, orders, orderId, partial } = body;
+
+    // Action: BATCH SYNC ORDERS
+    if (action === "sync" && Array.isArray(orders)) {
+      const supabase = getSupabaseClient();
+      if (globalServerOrders.length === 0) {
+        globalServerOrders = orders;
+      } else {
+        const map = new Map<string, OrderData>();
+        globalServerOrders.forEach((o) => map.set(o.id, o));
+        orders.forEach((o: OrderData) => {
+          const existing = map.get(o.id);
+          if (existing) {
+            map.set(o.id, { ...existing, ...o });
+          } else {
+            map.set(o.id, o);
+          }
+        });
+        globalServerOrders = Array.from(map.values());
+      }
+
+      if (supabase && orders.length > 0) {
+        try {
+          const rows = orders.map((o: OrderData) => ({
+            id: o.id,
+            code: o.code,
+            official_code: o.officialCode || o.code,
+            temp_code: o.tempCode || o.code,
+            customer_name: o.customerName,
+            whatsapp: o.whatsapp,
+            instagram: o.instagram,
+            package: o.package,
+            photo_count: o.photoCount,
+            total_amount: o.totalAmount,
+            status: o.status,
+            customer_gdrive_url: o.customerGdriveUrl || null,
+            gdrive_review_url: o.gdriveReviewUrl || null,
+            gdrive_final_url: o.gdriveFinalUrl || null,
+            brief_text: o.briefText || null,
+            review_started_at: o.reviewStartedAt || null,
+            created_at: o.createdAt || new Date().toISOString(),
+          }));
+          await supabase.from("orders").upsert(rows);
+        } catch (e) {
+          console.warn("Supabase batch sync notice:", e);
+        }
+      }
+
+      return NextResponse.json({ success: true, orders: globalServerOrders });
+    }
 
     // Action: CLEAR ALL ORDERS
     if (action === "clear") {
