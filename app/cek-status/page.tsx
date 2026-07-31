@@ -427,25 +427,48 @@ function CekStatusContent() {
               )}
 
               {/* Completed — download */}
-              {currentOrder.status === "Selesai" && currentOrder.gdriveFinalUrl && (
-                <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-5 space-y-3">
-                  <div className="flex items-center gap-2 font-black text-[12px] text-emerald-800 dark:text-emerald-300">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" /> Pesanan Selesai & Lunas!
+              {currentOrder.status === "Selesai" && (() => {
+                const resultUrl = currentOrder.gdriveFinalUrl || currentOrder.gdriveReviewUrl || currentOrder.customerGdriveUrl;
+
+                return (
+                  <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-5 space-y-3 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-black text-[12px] text-emerald-800 dark:text-emerald-300">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500" /> Pesanan Selesai & Lunas!
+                      </div>
+                      <span className="px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-[9px] font-black rounded-full border border-emerald-300 dark:border-emerald-700">
+                        Status: Selesai
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-emerald-700 dark:text-emerald-400 leading-relaxed">
+                      Terima kasih telah mempercayai CosGen.id! Hasil edit foto HD siap kamu akses & unduh secara penuh.
+                    </p>
+                    {resultUrl ? (
+                      <a
+                        href={resultUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[12px] rounded-xl shadow-md shadow-emerald-600/20 transition-all hover:scale-[1.01] cursor-pointer"
+                      >
+                        <Folder className="w-4 h-4 text-emerald-200" /> Buka & Unduh File Hasil Edit (Google Drive)
+                        <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+                      </a>
+                    ) : (
+                      <div className="p-3 bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 rounded-xl text-[11px] text-slate-600 dark:text-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <span>Link Google Drive hasil pengerjaan sedang disiapkan Admin.</span>
+                        <a
+                          href={`https://wa.me/6281234567890?text=Halo%20Admin%20CosGen,%20pesanan%20${currentOrder.officialCode || currentOrder.code}%20sudah%20Selesai.%20Mohon%20link%20GDrive%20hasilnya.`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[10px] flex items-center justify-center gap-1 shrink-0"
+                        >
+                          Hubungi WA Admin
+                        </a>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-[11px] text-emerald-700 dark:text-emerald-400 leading-relaxed">
-                    Terima kasih telah mempercayai CosGen.id! Unduh file HD tanpa watermark via Google Drive.
-                  </p>
-                  <a
-                    href={currentOrder.gdriveFinalUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[12px] rounded-xl shadow-sm transition-all hover:scale-[1.01]"
-                  >
-                    <Folder className="w-3.5 h-3.5" /> Unduh File Final HD
-                    <ExternalLink className="w-3 h-3 opacity-60" />
-                  </a>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Waiting message for pending states */}
               {(currentOrder.status === "Menunggu Konfirmasi" || currentOrder.status === "Dalam Antrian" || currentOrder.status === "Sedang Dikerjakan") && (
