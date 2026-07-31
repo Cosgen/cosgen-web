@@ -104,6 +104,34 @@ export function mergeOrders(primary: OrderData[], secondary: OrderData[]): Order
   return Array.from(map.values());
 }
 
+// Merge server orders with local orders, purging any deleted orders not on server (unless created within last 30s)
+export function mergeOrdersServerAuthority(serverOrders: OrderData[], localOrders: OrderData[]): OrderData[] {
+  const serverKeys = new Set<string>();
+  serverOrders.forEach((o) => {
+    if (o.id) serverKeys.add(o.id);
+    if (o.code) serverKeys.add(o.code);
+    if (o.officialCode) serverKeys.add(o.officialCode);
+    if (o.tempCode) serverKeys.add(o.tempCode);
+  });
+
+  const now = Date.now();
+  const recentInFlightLocal = localOrders.filter((o) => {
+    const isPresentOnServer =
+      (o.id && serverKeys.has(o.id)) ||
+      (o.code && serverKeys.has(o.code)) ||
+      (o.officialCode && serverKeys.has(o.officialCode)) ||
+      (o.tempCode && serverKeys.has(o.tempCode));
+
+    if (isPresentOnServer) return false;
+
+    // Only keep local orders created within last 30s (in-flight creation)
+    const createdTime = new Date(o.createdAt).getTime();
+    return !isNaN(createdTime) && now - createdTime < 30000;
+  });
+
+  return mergeOrders(serverOrders, recentInFlightLocal);
+}
+
 // Fetch latest global orders from server API (Supabase) and merge safely with local
 export async function syncGlobalOrdersFromServer(): Promise<OrderData[]> {
   try {
@@ -112,8 +140,8 @@ export async function syncGlobalOrdersFromServer(): Promise<OrderData[]> {
       const data = await res.json();
       if (data.orders && Array.isArray(data.orders)) {
         const localOrders = getStoredOrders();
-        // Smart merge: never wipe local orders if server responds with 0 orders
-        const merged = mergeOrders(data.orders, localOrders);
+        // Use Server Authority merge to purge deleted orders
+        const merged = mergeOrdersServerAuthority(data.orders, localOrders);
         if (typeof window !== "undefined") {
           localStorage.setItem("cosgen_admin_orders", JSON.stringify(merged));
           window.dispatchEvent(new Event("cosgen_orders_updated"));
@@ -146,15 +174,6 @@ export function saveOrdersToStorage(orders: OrderData[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem("cosgen_admin_orders", JSON.stringify(orders));
   window.dispatchEvent(new Event("cosgen_orders_updated"));
-
-  // Also sync to server API asynchronously
-  try {
-    fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "sync", orders }),
-    }).catch(() => {});
-  } catch {}
 }
 
 export async function saveNewSingleOrder(newOrder: OrderData): Promise<OrderData[]> {
@@ -173,7 +192,7 @@ export async function saveNewSingleOrder(newOrder: OrderData): Promise<OrderData
     if (res.ok) {
       const json = await res.json();
       if (json.orders && Array.isArray(json.orders)) {
-        const merged = mergeOrders(json.orders, updated);
+        const merged = mergeOrdersServerAuthority(json.orders, updated);
         saveOrdersToStorage(merged);
         return merged;
       }
@@ -230,7 +249,7 @@ export async function updateSingleOrder(orderId: string, partial: Partial<OrderD
     if (res.ok) {
       const json = await res.json();
       if (json.orders && Array.isArray(json.orders)) {
-        const merged = mergeOrders(json.orders, updated);
+        const merged = mergeOrdersServerAuthority(json.orders, updated);
         saveOrdersToStorage(merged);
         return merged.find(
           (o) =>
@@ -254,15 +273,28 @@ export async function updateSingleOrder(orderId: string, partial: Partial<OrderD
 
 export async function deleteSingleOrder(orderId: string) {
   const current = getStoredOrders();
-  const updated = current.filter((o) => o.id !== orderId);
+  const updated = current.filter(
+    (o) =>
+      o.id !== orderId &&
+      o.code !== orderId &&
+      (o.officialCode ? o.officialCode !== orderId : true) &&
+      (o.tempCode ? o.tempCode !== orderId : true)
+  );
   saveOrdersToStorage(updated);
 
   try {
-    await fetch("/api/orders", {
+    const res = await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "delete", orderId }),
     });
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json.orders && Array.isArray(json.orders)) {
+        saveOrdersToStorage(json.orders);
+      }
+    }
   } catch (err) {
     console.error("Failed to delete order on server API:", err);
   }
