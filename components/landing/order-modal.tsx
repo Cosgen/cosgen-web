@@ -105,7 +105,7 @@ export function OrderModal({
       status: "Menunggu Konfirmasi",
       customerGdriveUrl: customerGdriveUrl || undefined,
       briefText: compiledBrief,
-      createdAt: new Date().toISOString().replace("T", " ").slice(0, 16),
+      createdAt: new Date().toISOString(),
     };
 
     saveNewSingleOrder(newOrder);

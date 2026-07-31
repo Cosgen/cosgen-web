@@ -104,7 +104,6 @@ export function mergeOrders(primary: OrderData[], secondary: OrderData[]): Order
   return Array.from(map.values());
 }
 
-// Merge server orders with local orders, purging any deleted orders not on server (unless created within last 30s)
 export function mergeOrdersServerAuthority(serverOrders: OrderData[], localOrders: OrderData[]): OrderData[] {
   const serverKeys = new Set<string>();
   serverOrders.forEach((o) => {
@@ -124,9 +123,14 @@ export function mergeOrdersServerAuthority(serverOrders: OrderData[], localOrder
 
     if (isPresentOnServer) return false;
 
-    // Only keep local orders created within last 30s (in-flight creation)
-    const createdTime = new Date(o.createdAt).getTime();
-    return !isNaN(createdTime) && now - createdTime < 30000;
+    let time = new Date(o.createdAt).getTime();
+    if (isNaN(time) && o.createdAt) {
+      time = new Date(o.createdAt.replace(" ", "T")).getTime();
+    }
+
+    // Fail safe: if date parsing fails or order was created within last 5 mins (300,000ms), KEEP local order!
+    if (isNaN(time)) return true;
+    return now - time < 300000;
   });
 
   return mergeOrders(serverOrders, recentInFlightLocal);

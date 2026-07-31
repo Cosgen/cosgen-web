@@ -64,12 +64,15 @@ export default function AdminSchedulerPage() {
           const json = await res.json();
           if (json.orders && Array.isArray(json.orders)) {
             const activeOrders = json.orders.filter((o: any) => o.status !== "Ditolak");
-            setUsedSlots(activeOrders.length);
+            const totalPhotosUsed = activeOrders.reduce((sum: number, o: any) => sum + Math.max(1, Number(o.photo_count || o.photoCount) || 1), 0);
+            setUsedSlots(totalPhotosUsed);
           }
         }
       } catch (e) {
         const orders = getStoredOrders();
-        setUsedSlots(orders.filter((o) => o.status !== "Ditolak").length);
+        const activeLocal = orders.filter((o) => o.status !== "Ditolak");
+        const totalPhotosUsed = activeLocal.reduce((sum, o) => sum + Math.max(1, o.photoCount || 1), 0);
+        setUsedSlots(totalPhotosUsed);
       }
 
       // 2. Load scheduler settings from server API
