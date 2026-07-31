@@ -1,7 +1,26 @@
 # 🚀 PROJECT HANDOVER & BACKUP DOCUMENTATION
 **Project**: CosGen Web App SaaS (`cosgen-web`)
 **Domain**: `https://www.cosgen.web.id` / `https://cosgen-web.vercel.app`
-**Date**: July 31, 2026
+**Last Updated**: July 31, 2026 — 23:28 WIB
+
+---
+
+## 🚨 CRITICAL FIX — Must Read First (July 31, 2026)
+
+**Root Cause of All Mobile Issues Found & Fixed:**
+
+`lib/order-store.ts` had `"use client"` at the top but was imported by the server-side API route `app/api/orders/route.ts`. Next.js 16 throws a runtime error when a `"use client"` module is called from a server context:
+> _"attempted to call mergeOrders from the server but mergeOrders is on the client"_
+
+This caused **ALL `/api/orders` calls to return HTTP 500**, meaning:
+- No orders ever saved to Supabase
+- Mobile got empty responses (no orders, no slot data)
+
+**Resolution**: Created `lib/order-types.ts` (no `"use client"`) containing `OrderData`, `mergeOrders`, `STATUS_WEIGHT`. The API route now imports from `lib/order-types.ts`. `lib/order-store.ts` re-exports from `lib/order-types.ts` for backward compatibility.
+
+> ⚠️ **Rule for future agents**: NEVER import from `lib/order-store.ts` inside any `app/api/*/route.ts` file. Always import shared types from `lib/order-types.ts` instead.
+
+---
 
 ---
 
