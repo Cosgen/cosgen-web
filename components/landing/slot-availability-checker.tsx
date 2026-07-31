@@ -71,7 +71,8 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
           const d = await res.json();
           if (d.orders && Array.isArray(d.orders)) {
             const activeOrders = d.orders.filter((o: any) => o.status !== "Ditolak");
-            setUsedSlots(activeOrders.length);
+            const totalPhotosUsed = activeOrders.reduce((sum: number, o: any) => sum + Math.max(1, Number(o.photo_count || o.photoCount) || 1), 0);
+            setUsedSlots(totalPhotosUsed);
           }
         }
       } catch (e) {
