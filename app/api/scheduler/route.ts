@@ -23,35 +23,38 @@ export async function GET() {
   try {
     const supabase = getSupabaseClient();
     if (supabase) {
-      // 1. Try dedicated scheduler_settings table
+      // 1. Universal Config Fallback inside Supabase orders table
+      try {
+        const { data: configRow } = await supabase
+          .from("orders")
+          .select("brief_text")
+          .eq("id", "_config_scheduler")
+          .maybeSingle();
+
+        if (configRow && configRow.brief_text) {
+          const parsed = JSON.parse(configRow.brief_text);
+          if (parsed && typeof parsed.totalSlots === "number" && parsed.totalSlots > 0) {
+            globalServerScheduler = {
+              totalSlots: Number(parsed.totalSlots) || 5,
+              holidays: Array.isArray(parsed.holidays) ? parsed.holidays : [],
+            };
+            return NextResponse.json({ settings: globalServerScheduler, source: "supabase_kv" });
+          }
+        }
+      } catch {}
+
+      // 2. Try dedicated scheduler_settings table
       try {
         const { data, error } = await supabase.from("scheduler_settings").select("*").eq("id", "main").maybeSingle();
         if (!error && data) {
           const settings: SchedulerSettings = {
-            totalSlots: Number(data.total_slots ?? data.totalSlots) || 25,
+            totalSlots: Number(data.total_slots ?? data.totalSlots) || 5,
             holidays: Array.isArray(data.holidays) ? data.holidays : typeof data.holidays === "string" ? JSON.parse(data.holidays) : [],
           };
           globalServerScheduler = settings;
           return NextResponse.json({ settings, source: "supabase_table" });
         }
       } catch {}
-
-      // 2. Universal Config Fallback inside Supabase orders table
-      const { data: configRow, error: configErr } = await supabase
-        .from("orders")
-        .select("brief_text")
-        .eq("id", "_config_scheduler")
-        .maybeSingle();
-
-      if (!configErr && configRow && configRow.brief_text) {
-        try {
-          const parsed = JSON.parse(configRow.brief_text);
-          if (parsed && typeof parsed.totalSlots === "number") {
-            globalServerScheduler = parsed;
-            return NextResponse.json({ settings: parsed, source: "supabase_kv" });
-          }
-        } catch {}
-      }
     }
   } catch (err) {
     console.warn("Supabase scheduler fetch notice:", err);
@@ -67,7 +70,7 @@ export async function POST(request: Request) {
     const { totalSlots, holidays } = body;
 
     const settings: SchedulerSettings = {
-      totalSlots: Number(totalSlots) || 25,
+      totalSlots: Number(totalSlots) > 0 ? Number(totalSlots) : 5,
       holidays: Array.isArray(holidays) ? holidays : [],
     };
 
@@ -75,7 +78,7 @@ export async function POST(request: Request) {
 
     const supabase = getSupabaseClient();
     if (supabase) {
-      // 1. Universal Config Save inside Supabase
+      // 1. Universal Config Save inside Supabase orders table
       try {
         await supabase.from("orders").upsert({
           id: "_config_scheduler",
