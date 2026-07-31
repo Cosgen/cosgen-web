@@ -49,40 +49,23 @@ const STATUS_WEIGHT: Record<string, number> = {
 export function mergeOrders(primary: OrderData[], secondary: OrderData[]): OrderData[] {
   const map = new Map<string, OrderData>();
 
-  const allKeys = new Set<string>();
-  primary.forEach((o) => {
-    if (o.id) allKeys.add(o.id);
-    if (o.code) allKeys.add(o.code);
-  });
-  secondary.forEach((o) => {
-    if (o.id) allKeys.add(o.id);
-    if (o.code) allKeys.add(o.code);
+  const getKey = (o: OrderData) => o.id || o.code || o.officialCode || o.tempCode;
+
+  // Add all secondary items first
+  secondary.forEach((s) => {
+    const k = getKey(s);
+    if (k) map.set(k, s);
   });
 
-  allKeys.forEach((key) => {
-    const p = primary.find(
-      (o) =>
-        o.id === key ||
-        o.code === key ||
-        (o.officialCode && o.officialCode === key) ||
-        (o.tempCode && o.tempCode === key)
-    );
-    const s = secondary.find(
-      (o) =>
-        o.id === key ||
-        o.code === key ||
-        (o.officialCode && o.officialCode === key) ||
-        (o.tempCode && o.tempCode === key)
-    );
+  // Merge primary items
+  primary.forEach((p) => {
+    const k = getKey(p);
+    if (!k) return;
 
-    const mainKey = (p && p.id) || (s && s.id) || key;
-    if (map.has(mainKey)) return;
-
-    if (p && !s) {
-      map.set(mainKey, p);
-    } else if (s && !p) {
-      map.set(mainKey, s);
-    } else if (p && s) {
+    const s = map.get(k);
+    if (!s) {
+      map.set(k, p);
+    } else {
       const pW = STATUS_WEIGHT[p.status] || 0;
       const sW = STATUS_WEIGHT[s.status] || 0;
 
@@ -90,14 +73,17 @@ export function mergeOrders(primary: OrderData[], secondary: OrderData[]): Order
 
       const merged: OrderData = {
         ...base,
+        id: p.id || s.id,
+        code: p.code || s.code,
+        tempCode: s.tempCode || p.tempCode || p.code || s.code,
+        officialCode: s.officialCode || p.officialCode || base.officialCode,
         reviewStartedAt: s.reviewStartedAt || p.reviewStartedAt || base.reviewStartedAt,
         gdriveReviewUrl: s.gdriveReviewUrl || p.gdriveReviewUrl || base.gdriveReviewUrl,
         gdriveFinalUrl: s.gdriveFinalUrl || p.gdriveFinalUrl || base.gdriveFinalUrl,
-        officialCode: s.officialCode || p.officialCode || base.officialCode,
         isAccByAdmin: s.isAccByAdmin || p.isAccByAdmin || base.isAccByAdmin,
       };
 
-      map.set(mainKey, merged);
+      map.set(k, merged);
     }
   });
 
