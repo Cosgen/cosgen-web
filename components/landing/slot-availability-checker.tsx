@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Sparkles } from "lucide-react";
-import { getStoredOrders } from "@/lib/order-store";
+import { getStoredOrders, syncGlobalOrdersFromServer } from "@/lib/order-store";
 
 interface SlotAvailabilityCheckerProps {
   isOpen: boolean;
@@ -67,20 +67,17 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
     const loadRealtimeSlots = async () => {
       let ordersToCount: any[] = [];
 
-      // 1. Fetch server order count directly
+      // 1. Fetch server order count & sync global orders directly
       try {
-        const res = await fetch(`/api/orders?t=${Date.now()}`, { cache: "no-store" });
-        if (res.ok) {
-          const d = await res.json();
-          if (d.orders && Array.isArray(d.orders) && d.orders.length > 0) {
-            ordersToCount = d.orders;
-          }
+        const synced = await syncGlobalOrdersFromServer();
+        if (Array.isArray(synced) && synced.length > 0) {
+          ordersToCount = synced;
         }
       } catch (e) {
         console.warn("Direct order fetch notice:", e);
       }
 
-      // If server returned 0 orders (or cold start), fallback to stored orders
+      // Fallback to stored orders if needed
       if (ordersToCount.length === 0) {
         const local = getStoredOrders();
         if (local.length > 0) {
