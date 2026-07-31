@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { OrderData } from "@/lib/order-store";
+import { OrderData, mergeOrders } from "@/lib/order-store";
 
 // Global in-memory server store for immediate multi-client sync
 let globalServerOrders: OrderData[] = [];
@@ -13,6 +13,20 @@ function getSupabaseClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_KEY;
   if (!url || !key) return null;
   return createClient(url, key);
+}
+
+async function saveMasterKvBackup(supabase: any, orders: OrderData[]) {
+  if (!supabase || !Array.isArray(orders)) return;
+  try {
+    await supabase.from("orders").upsert({
+      id: "_global_all_orders",
+      code: "_SYSTEM_CONFIG_",
+      customer_name: "SYSTEM_KV_BACKUP",
+      brief_text: JSON.stringify(orders),
+    });
+  } catch (e) {
+    console.warn("KV backup upsert notice:", e);
+  }
 }
 
 async function updateSupabaseOrder(supabase: any, orderId: string, dbPartial: any) {
@@ -45,8 +59,17 @@ export async function GET() {
     if (supabase) {
       const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
       if (!error && data && Array.isArray(data)) {
+        let masterKvOrders: OrderData[] = [];
+        const kvRow = data.find((d: any) => d.id === "_global_all_orders");
+        if (kvRow && kvRow.brief_text) {
+          try {
+            const parsed = JSON.parse(kvRow.brief_text);
+            if (Array.isArray(parsed)) masterKvOrders = parsed;
+          } catch {}
+        }
+
         const mappedOrders: OrderData[] = data
-          .filter((d: any) => !d.id?.startsWith("_config_") && d.code !== "_SYSTEM_CONFIG_")
+          .filter((d: any) => !d.id?.startsWith("_config_") && !d.id?.startsWith("_global_") && d.code !== "_SYSTEM_CONFIG_")
           .map((d: any) => ({
             id: d.id,
             code: d.code,
@@ -70,21 +93,13 @@ export async function GET() {
             createdAt: d.created_at || d.createdAt || new Date().toISOString(),
           }));
 
-        // Merge with existing server memory so newly added in-flight properties aren't lost
+        // Combine individual database rows with master KV backup orders
+        const combined = mergeOrders(mappedOrders, masterKvOrders);
+
         if (globalServerOrders.length > 0) {
-          const map = new Map<string, OrderData>();
-          mappedOrders.forEach((o) => map.set(o.id, o));
-          globalServerOrders.forEach((o) => {
-            const existing = map.get(o.id);
-            if (existing) {
-              map.set(o.id, { ...existing, ...o });
-            } else {
-              map.set(o.id, o);
-            }
-          });
-          globalServerOrders = Array.from(map.values());
+          globalServerOrders = mergeOrders(combined, globalServerOrders);
         } else {
-          globalServerOrders = mappedOrders;
+          globalServerOrders = combined;
         }
 
         return NextResponse.json({ orders: globalServerOrders, source: "supabase" });
@@ -106,21 +121,7 @@ export async function POST(request: Request) {
     // Action: BATCH SYNC ORDERS
     if (action === "sync" && Array.isArray(orders)) {
       const supabase = getSupabaseClient();
-      if (globalServerOrders.length === 0) {
-        globalServerOrders = orders;
-      } else {
-        const map = new Map<string, OrderData>();
-        globalServerOrders.forEach((o) => map.set(o.id, o));
-        orders.forEach((o: OrderData) => {
-          const existing = map.get(o.id);
-          if (existing) {
-            map.set(o.id, { ...existing, ...o });
-          } else {
-            map.set(o.id, o);
-          }
-        });
-        globalServerOrders = Array.from(map.values());
-      }
+      globalServerOrders = mergeOrders(globalServerOrders, orders);
 
       if (supabase && orders.length > 0) {
         try {
@@ -136,6 +137,8 @@ export async function POST(request: Request) {
             photo_count: o.photoCount,
             total_amount: o.totalAmount,
             status: o.status,
+            is_acc_by_admin: o.isAccByAdmin ?? false,
+            rejection_reason: o.rejectionReason || null,
             customer_gdrive_url: o.customerGdriveUrl || null,
             gdrive_review_url: o.gdriveReviewUrl || null,
             gdrive_final_url: o.gdriveFinalUrl || null,
@@ -147,6 +150,7 @@ export async function POST(request: Request) {
         } catch (e) {
           console.warn("Supabase batch sync notice:", e);
         }
+        await saveMasterKvBackup(supabase, globalServerOrders);
       }
 
       return NextResponse.json({ success: true, orders: globalServerOrders });
@@ -194,6 +198,7 @@ export async function POST(request: Request) {
         } catch (e) {
           console.warn("Supabase delete by temp_code notice:", e);
         }
+        await saveMasterKvBackup(supabase, globalServerOrders);
       }
       return NextResponse.json({ success: true, orders: globalServerOrders });
     }
@@ -222,15 +227,20 @@ export async function POST(request: Request) {
             photo_count: order.photoCount,
             total_amount: order.totalAmount,
             status: order.status,
+            is_acc_by_admin: order.isAccByAdmin ?? false,
+            rejection_reason: order.rejectionReason || null,
             customer_gdrive_url: order.customerGdriveUrl || null,
+            gdrive_review_url: order.gdriveReviewUrl || null,
+            gdrive_final_url: order.gdriveFinalUrl || null,
             brief_text: order.briefText || null,
             review_started_at: order.reviewStartedAt || null,
-            created_at: new Date().toISOString(),
+            created_at: order.createdAt || new Date().toISOString(),
           });
           if (upsertErr) console.error("Supabase upsert error:", upsertErr);
         } catch (e) {
           console.warn("Supabase upsert exception:", e);
         }
+        await saveMasterKvBackup(supabase, globalServerOrders);
       }
 
       return NextResponse.json({ success: true, order, orders: globalServerOrders });
@@ -268,6 +278,7 @@ export async function POST(request: Request) {
         if (partial.reviewStartedAt !== undefined) dbPartial.review_started_at = partial.reviewStartedAt;
 
         await updateSupabaseOrder(supabase, orderId, dbPartial);
+        await saveMasterKvBackup(supabase, globalServerOrders);
       }
 
       return NextResponse.json({ success: true, orders: globalServerOrders });
