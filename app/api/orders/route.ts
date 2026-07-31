@@ -2,6 +2,17 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { OrderData, mergeOrders } from "@/lib/order-store";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
+const NO_CACHE_HEADERS = {
+  "Content-Type": "application/json",
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0",
+  "Pragma": "no-cache",
+  "Expires": "0",
+};
+
 // Global in-memory server store for immediate multi-client sync
 let globalServerOrders: OrderData[] = [];
 
@@ -102,14 +113,14 @@ export async function GET() {
           globalServerOrders = combined;
         }
 
-        return NextResponse.json({ orders: globalServerOrders, source: "supabase" });
+        return new NextResponse(JSON.stringify({ orders: globalServerOrders, source: "supabase" }), { headers: NO_CACHE_HEADERS });
       }
     }
   } catch (err) {
     console.warn("Supabase fetch notice, using global server memory:", err);
   }
 
-  return NextResponse.json({ orders: globalServerOrders, source: "memory" });
+  return new NextResponse(JSON.stringify({ orders: globalServerOrders, source: "memory" }), { headers: NO_CACHE_HEADERS });
 }
 
 // POST /api/orders — save, update, delete, or clear orders globally

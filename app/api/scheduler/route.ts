@@ -1,6 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
+const NO_CACHE_HEADERS = {
+  "Content-Type": "application/json",
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0",
+  "Pragma": "no-cache",
+  "Expires": "0",
+};
+
 export interface SchedulerSettings {
   totalSlots: number;
   holidays: number[];
@@ -41,7 +52,7 @@ export async function GET() {
               totalSlots: Number(parsed.totalSlots) || 5,
               holidays: Array.isArray(parsed.holidays) ? parsed.holidays : [],
             };
-            return NextResponse.json({ settings: globalServerScheduler, source: "supabase_kv" });
+            return new NextResponse(JSON.stringify({ settings: globalServerScheduler, source: "supabase_kv" }), { headers: NO_CACHE_HEADERS });
           }
         }
       } catch {}
@@ -55,7 +66,7 @@ export async function GET() {
             holidays: Array.isArray(data.holidays) ? data.holidays : typeof data.holidays === "string" ? JSON.parse(data.holidays) : [],
           };
           globalServerScheduler = settings;
-          return NextResponse.json({ settings, source: "supabase_table" });
+          return new NextResponse(JSON.stringify({ settings, source: "supabase_table" }), { headers: NO_CACHE_HEADERS });
         }
       } catch {}
     }
@@ -63,7 +74,7 @@ export async function GET() {
     console.warn("Supabase scheduler fetch notice:", err);
   }
 
-  return NextResponse.json({ settings: globalServerScheduler, source: "memory" });
+  return new NextResponse(JSON.stringify({ settings: globalServerScheduler, source: "memory" }), { headers: NO_CACHE_HEADERS });
 }
 
 // POST /api/scheduler — save global totalSlots & holidays set by Admin to Supabase
