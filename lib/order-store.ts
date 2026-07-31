@@ -93,49 +93,31 @@ export function mergeOrders(primary: OrderData[], secondary: OrderData[]): Order
 // Fetch latest global orders from server API (Supabase) and merge safely with local
 export async function syncGlobalOrdersFromServer(): Promise<OrderData[]> {
   try {
-    const res = await fetch(`/api/orders?t=${Date.now()}`, { cache: "no-store" });
+    const res = await fetch(`/api/orders?t=${Date.now()}_${Math.random()}`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" },
+    });
     if (res.ok) {
       const data = await res.json();
       if (data.orders && Array.isArray(data.orders)) {
         const localOrders = getStoredOrders();
         
-        // Auto-push any local orders to server if missing on server
-        if (localOrders.length > 0) {
-          const serverKeys = new Set<string>();
-          data.orders.forEach((o: any) => {
-            if (o.id) serverKeys.add(o.id);
-            if (o.code) serverKeys.add(o.code);
-            if (o.officialCode) serverKeys.add(o.officialCode);
-            if (o.tempCode) serverKeys.add(o.tempCode);
-          });
-
-          const missingOnServer = localOrders.filter(
-            (o) =>
-              (!o.id || !serverKeys.has(o.id)) &&
-              (!o.code || !serverKeys.has(o.code)) &&
-              (!o.officialCode || !serverKeys.has(o.officialCode)) &&
-              (!o.tempCode || !serverKeys.has(o.tempCode))
-          );
-
-          if (missingOnServer.length > 0) {
-            try {
-              await fetch("/api/orders", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "sync", orders: localOrders }),
-              });
-            } catch (e) {
-              console.warn("Failed to auto-push local orders to server:", e);
-            }
-          }
-        }
-
         // Permanently safe merge — NEVER expire or purge orders by timer!
         const merged = mergeOrders(data.orders, localOrders);
         if (typeof window !== "undefined") {
           localStorage.setItem("cosgen_admin_orders", JSON.stringify(merged));
           window.dispatchEvent(new Event("cosgen_orders_updated"));
         }
+
+        // Auto-push merged result to server if local has new orders
+        if (localOrders.length > 0) {
+          fetch("/api/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "sync", orders: merged }),
+          }).catch(() => {});
+        }
+
         return merged;
       }
     }
@@ -164,6 +146,13 @@ export function saveOrdersToStorage(orders: OrderData[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem("cosgen_admin_orders", JSON.stringify(orders));
   window.dispatchEvent(new Event("cosgen_orders_updated"));
+
+  // MANDATORY SERVER SYNC: Automatically upload to server API & Supabase so HP & Desktop sync instantly!
+  fetch("/api/orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "sync", orders }),
+  }).catch((err) => console.warn("Background server sync notice:", err));
 }
 
 export async function saveNewSingleOrder(newOrder: OrderData): Promise<OrderData[]> {

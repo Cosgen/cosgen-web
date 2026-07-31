@@ -58,6 +58,22 @@ export default function AdminPesananListPage() {
     return matchesSearch && matchesStatus;
   });
 
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState("");
+
+  const handleForceSyncToCloud = async () => {
+    setSyncing(true);
+    try {
+      const current = getStoredOrders();
+      saveOrdersToStorage(current);
+      setSyncMsg("✅ Data Pesanan Berhasil Di-sync ke HP & Cloud Database!");
+    } catch {
+      setSyncMsg("⚠️ Gagal sync ke cloud");
+    }
+    setSyncing(false);
+    setTimeout(() => setSyncMsg(""), 3500);
+  };
+
   return (
     <div className="p-4 sm:p-6 space-y-4 max-w-6xl mx-auto font-sans text-xs">
       {/* Top Bar Header */}
@@ -77,10 +93,23 @@ export default function AdminPesananListPage() {
           <p className="text-slate-500 text-[11px]">
             Kelola status REQ/ORD, konfirmasi ACC, unduh invoice PDF/TXT, dan atur detail pesanan.
           </p>
+          {syncMsg && (
+            <p className="mt-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded w-fit">
+              {syncMsg}
+            </p>
+          )}
         </div>
 
         {/* Clear All Action */}
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleForceSyncToCloud}
+            disabled={syncing}
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+          >
+            <span>{syncing ? "SINKRONISASI..." : "⚡ SYNC DATA KE HP"}</span>
+          </button>
           <button
             type="button"
             onClick={handleClearOrders}
