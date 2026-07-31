@@ -124,7 +124,6 @@ export default function AdminOrderDetailPage() {
     const officialCode = `ORD-${randomDigits}`;
     saveChanges({
       officialCode,
-      code: officialCode,
       status: "Dalam Antrian",
     });
   };
