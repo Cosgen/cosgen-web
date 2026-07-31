@@ -65,7 +65,10 @@ export default function AdminOrderDetailPage() {
     loadOrder();
     syncGlobalOrdersFromServer().then(() => loadOrder());
 
-    const handleUpdate = () => loadOrder();
+    const handleUpdate = () => {
+      loadOrder();
+      syncGlobalOrdersFromServer().then(() => loadOrder());
+    };
     window.addEventListener("cosgen_orders_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
     return () => {
