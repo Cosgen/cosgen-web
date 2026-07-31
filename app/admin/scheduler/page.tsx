@@ -5,10 +5,12 @@ import { Calendar, Save, Plus, Minus, CheckCircle2 } from "lucide-react";
 import { getStoredOrders, syncGlobalOrdersFromServer } from "@/lib/order-store";
 
 export default function AdminSchedulerPage() {
-  const [totalSlots, setTotalSlots] = useState<number>(5);
-  const [usedSlots, setUsedSlots]   = useState<number>(0);
-  const [holidays, setHolidays]     = useState<number[]>([]);
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [totalSlots, setTotalSlots]       = useState<number>(5);
+  const [newSlotInput, setNewSlotInput]   = useState<number>(5);
+  const [isEditingInput, setIsEditingInput] = useState<boolean>(false);
+  const [usedSlots, setUsedSlots]         = useState<number>(0);
+  const [holidays, setHolidays]           = useState<number[]>([]);
+  const [savedSuccess, setSavedSuccess]   = useState(false);
 
   // Client-side calendar data to ensure accurate month & weekday alignment
   const [calendarData, setCalendarData] = useState<{
@@ -91,6 +93,9 @@ export default function AdminSchedulerPage() {
         if (d && d.settings) {
           if (typeof d.settings.totalSlots === "number" && d.settings.totalSlots > 0) {
             setTotalSlots(d.settings.totalSlots);
+            if (!isEditingInput) {
+              setNewSlotInput(d.settings.totalSlots);
+            }
           }
           if (Array.isArray(d.settings.holidays)) setHolidays(d.settings.holidays);
           localStorage.setItem("cosgen_scheduler_data", JSON.stringify(d.settings));
@@ -100,7 +105,10 @@ export default function AdminSchedulerPage() {
         if (savedData) {
           try {
             const parsed = JSON.parse(savedData);
-            if (typeof parsed.totalSlots === "number") setTotalSlots(parsed.totalSlots);
+            if (typeof parsed.totalSlots === "number") {
+              setTotalSlots(parsed.totalSlots);
+              if (!isEditingInput) setNewSlotInput(parsed.totalSlots);
+            }
             if (parsed.holidays && Array.isArray(parsed.holidays)) setHolidays(parsed.holidays);
           } catch {}
         }
@@ -121,7 +129,7 @@ export default function AdminSchedulerPage() {
       window.removeEventListener("cosgen_orders_updated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
-  }, []);
+  }, [isEditingInput]);
 
   const toggleHoliday = (day: number) => {
     if (holidays.includes(day)) {
@@ -134,8 +142,10 @@ export default function AdminSchedulerPage() {
   const handleSaveScheduler = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const validatedSlots = Math.max(1, Math.min(100, Number(totalSlots) || 1));
+    const validatedSlots = Math.max(1, Math.min(100, Number(newSlotInput) || 1));
     setTotalSlots(validatedSlots);
+    setNewSlotInput(validatedSlots);
+    setIsEditingInput(false);
 
     const data = { totalSlots: validatedSlots, holidays };
     localStorage.setItem("cosgen_scheduler_data", JSON.stringify(data));
@@ -154,6 +164,7 @@ export default function AdminSchedulerPage() {
         if (json.settings) {
           if (typeof json.settings.totalSlots === "number" && json.settings.totalSlots > 0) {
             setTotalSlots(json.settings.totalSlots);
+            setNewSlotInput(json.settings.totalSlots);
           }
           if (Array.isArray(json.settings.holidays)) {
             setHolidays(json.settings.holidays);
@@ -200,44 +211,64 @@ export default function AdminSchedulerPage() {
 
       {/* Slot Metrics Box */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-        <div className="bg-white p-3 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-center items-center text-center space-y-1.5 aspect-[1.3/1]">
-          <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider block">
-            Total Kuota Slot Studio
-          </span>
-          <div className="flex items-center justify-center gap-1.5 pt-1">
-            <button
-              type="button"
-              onClick={() => setTotalSlots(Math.max(1, totalSlots - 1))}
-              className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs shadow-xs cursor-pointer active:scale-95 transition-all"
-              title="Kurangi 1 Slot"
-            >
-              <Minus className="w-3.5 h-3.5" />
-            </button>
-            <input
-              type="number"
-              min={1}
-              max={100}
-              value={totalSlots}
-              onChange={(e) => {
-                const val = parseInt(e.target.value, 10);
-                if (!isNaN(val)) {
-                  setTotalSlots(Math.max(1, Math.min(100, val)));
-                } else {
-                  setTotalSlots(1);
-                }
-              }}
-              className="w-16 h-8 text-center font-mono font-black text-lg text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={() => setTotalSlots(totalSlots + 1)}
-              className="w-7 h-7 rounded-lg bg-blue-600 hover:bg-blue-700 flex items-center justify-center font-bold text-white text-xs shadow-xs cursor-pointer active:scale-95 transition-all"
-              title="Tambah 1 Slot"
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
+        {/* Card 1: Kuota Slot with Top Readonly & Bottom Input */}
+        <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between items-center text-center space-y-2">
+          {/* Top: Total Kuota Saat Ini */}
+          <div className="w-full pb-2 border-b border-slate-100 space-y-0.5">
+            <span className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-wider block">
+              Total Kuota Saat Ini
+            </span>
+            <span className="text-xl sm:text-2xl font-black text-blue-600 font-mono block">
+              {totalSlots} Slot
+            </span>
           </div>
-          <span className="text-[9px] font-semibold text-slate-400">Total Kuota Pengerjaan</span>
+
+          {/* Bottom: Kolom Ubah Kuota Baru */}
+          <div className="w-full space-y-1">
+            <label className="text-[9px] font-bold text-slate-600 uppercase block tracking-tight">
+              Ubah Kuota Baru:
+            </label>
+            <div className="flex items-center justify-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditingInput(true);
+                  setNewSlotInput(Math.max(1, newSlotInput - 1));
+                }}
+                className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs shadow-xs cursor-pointer active:scale-95 transition-all"
+                title="Kurangi 1 Slot"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={newSlotInput}
+                onChange={(e) => {
+                  setIsEditingInput(true);
+                  const val = parseInt(e.target.value, 10);
+                  if (!isNaN(val)) {
+                    setNewSlotInput(Math.max(1, Math.min(100, val)));
+                  } else {
+                    setNewSlotInput(1);
+                  }
+                }}
+                className="w-16 h-7 text-center font-mono font-black text-base text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditingInput(true);
+                  setNewSlotInput(newSlotInput + 1);
+                }}
+                className="w-7 h-7 rounded-lg bg-blue-600 hover:bg-blue-700 flex items-center justify-center font-bold text-white text-xs shadow-xs cursor-pointer active:scale-95 transition-all"
+                title="Tambah 1 Slot"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white p-3 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-center items-center text-center space-y-1 aspect-[1.3/1]">
@@ -282,20 +313,21 @@ export default function AdminSchedulerPage() {
           </div>
         </div>
 
-        {/* Days Grid */}
-        <div className="grid grid-cols-7 gap-1.5 text-center">
+        {/* Day Header Row */}
+        <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 py-0.5">
           {["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].map((d) => (
-            <div key={d} className="text-[9px] font-extrabold text-slate-500 uppercase py-0.5">
-              {d}
-            </div>
+            <div key={d}>{d}</div>
           ))}
+        </div>
 
-          {/* Empty padding cells before 1st day of month */}
+        {/* Dynamic Month Grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {/* Dynamic Weekday Padding Offset */}
           {calendarData.paddingArray.map((p) => (
-            <div key={`pad-${p}`} className="aspect-square" />
+            <div key={`pad-${p}`} className="aspect-square rounded-lg bg-slate-50/40 border border-transparent opacity-30" />
           ))}
 
-          {/* Actual month days */}
+          {/* Actual Days */}
           {calendarData.days.map((day) => {
             const isHoliday = holidays.includes(day);
             const isToday = day === calendarData.todayDate;
@@ -349,13 +381,13 @@ export default function AdminSchedulerPage() {
         {/* Submit */}
         <div className="flex items-center justify-between pt-2 border-t border-slate-100">
           <p className="text-[9px] text-slate-400">
-            Perubahan slot & hari libur langsung tersimpan di sistem.
+            Perubahan kuota slot baru & hari libur langsung tersimpan di sistem saat menekan tombol simpan.
           </p>
           <button
             type="submit"
             className="w-fit px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold shadow-xs flex items-center gap-1 cursor-pointer"
           >
-            <Save className="w-3 h-3" /> Simpan Pengaturan
+            <Save className="w-3.5 h-3.5" /> Simpan Pengaturan
           </button>
         </div>
       </form>
