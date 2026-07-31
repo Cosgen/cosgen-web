@@ -101,6 +101,17 @@ export function SlotAvailabilityChecker({ isOpen, onClose, onProceedOrder }: Slo
     };
 
     loadRealtimeSlots();
+
+    const interval = setInterval(loadRealtimeSlots, 3000);
+    const handleUpdate = () => loadRealtimeSlots();
+    window.addEventListener("cosgen_orders_updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("cosgen_orders_updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;

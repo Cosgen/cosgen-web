@@ -98,6 +98,7 @@ export default function AdminSchedulerPage() {
 
     loadRealtimeData();
 
+    const interval = setInterval(loadRealtimeData, 3000);
     const handleUpdate = () => {
       loadRealtimeData();
     };
@@ -105,6 +106,7 @@ export default function AdminSchedulerPage() {
     window.addEventListener("storage", handleUpdate);
 
     return () => {
+      clearInterval(interval);
       window.removeEventListener("cosgen_orders_updated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
